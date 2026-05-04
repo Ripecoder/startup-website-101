@@ -76,7 +76,7 @@ const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 
 let messages = [];
-const BACKEND_URL = "https://YOUR_RENDER_URL/chat";
+const BACKEND_URL = "https://server-vls8.onrender.com/chat";
 const SESSION_ID = "demo_" + Date.now();
 
 function addMessage(text, isUser = false) {
