@@ -92,7 +92,6 @@ function createLeadCard(lead) {
     <div class="lead-details">
 
       <div class="lead-item">📞 ${lead.phone || "N/A"}</div>
-      <div class="lead-item">📧 ${lead.email || "N/A"}</div>
       <div class="lead-item">💰 ${lead.budget || "N/A"}</div>
       <div class="lead-item">📍 ${lead.location || "N/A"}</div>
       <div class="lead-item">🏠 ${lead.bhk || "N/A"} BHK</div>
@@ -158,7 +157,7 @@ async function loadLeads() {
       return;
     }
 
-    data.leads.forEach(createLeadCard);
+    data.leads.reverse().forEach(createLeadCard);
 
     leadsTodayEl.textContent = data.leads.length;
     totalLeadsEl.textContent = data.leads.length;
