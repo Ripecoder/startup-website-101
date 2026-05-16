@@ -79,6 +79,7 @@ window.switchSection = function(section) {
 
 // ── STEP 2 ───────────────────────────────
 window.goToStep2 = async function () {
+  console.log("STEP 2 FUNCTION RUNNING");
 
   const name = document.getElementById("userName")?.value?.trim() || "";
   const email = document.getElementById("userEmailInput")?.value?.trim() || "";
@@ -116,6 +117,8 @@ window.goToStep2 = async function () {
         client_api_key: apiKey
       })
     });
+    
+    console.log("FETCH FINISHED");
 
     const data = await res.json();
 
