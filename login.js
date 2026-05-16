@@ -20,17 +20,24 @@ supabase.auth.getSession().then(({ data }) => {
 });
 
 // react to auth changes
-supabase.auth.onAuthStateChange((_event, session) => {
-  if (!authReady) return;
 
-  if (session) {
+// only run auth guard once page loads
+async function checkAuth() {
+  const { data } = await supabase.auth.getSession();
+
+  const isLoggedIn = !!data.session;
+  const isLoginPage = window.location.pathname.includes("login.html");
+
+  if (isLoggedIn && isLoginPage) {
     window.location.href = "dashboard.html";
-  } else {
-    if (!window.location.pathname.includes("login.html")) {
-      window.location.href = "login.html";
-    }
   }
-});
+
+  if (!isLoggedIn && !isLoginPage) {
+    window.location.href = "login.html";
+  }
+}
+
+checkAuth();
 
 
 // ─────────────────────────────────────
