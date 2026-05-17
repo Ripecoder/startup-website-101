@@ -6,39 +6,52 @@ const SUPABASE_ANON = "YOUR_ANON_KEY";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ─────────────────────────────────────
-// AUTH STATE (SINGLE SOURCE OF TRUTH)
+// GET CLIENT STATUS FROM BACKEND
 // ─────────────────────────────────────
-let authReady = false;
+async function getClientStatus(email) {
+  const res = await fetch(
+    `https://website-server-9b3o.onrender.com/api/client/status?email=${email}`
+  );
 
-// wait for Supabase to hydrate session properly
-supabase.auth.getSession().then(({ data }) => {
-  authReady = true;
+  return await res.json();
+}
 
-  if (data.session && window.location.pathname.includes("login.html")) {
-    window.location.href = "dashboard.html";
-  }
-});
-
-// react to auth changes
-
-// only run auth guard once page loads
+// ─────────────────────────────────────
+// AUTH ROUTING CORE
+// ─────────────────────────────────────
 async function checkAuth() {
   const { data } = await supabase.auth.getSession();
 
-  const isLoggedIn = !!data.session;
-  const isLoginPage = window.location.pathname.includes("login.html");
+  const session = data.session;
 
-  if (isLoggedIn && isLoginPage) {
-    window.location.href = "dashboard.html";
+  const path = window.location.pathname;
+  const isLoginPage = path.includes("login.html");
+
+  if (!session) {
+    if (!isLoginPage) window.location.href = "login.html";
+    return;
   }
 
-  if (!isLoggedIn && !isLoginPage) {
-    window.location.href = "login.html";
+  const email = session.user.email;
+  const status = await getClientStatus(email);
+
+  // CLIENT EXISTS → go to client dashboard
+  if (status.exists) {
+    sessionStorage.setItem("verbe_api_key", status.api_key);
+
+    if (path !== "/client-dashboard.html") {
+      window.location.href = "client-dashboard.html";
+    }
+    return;
+  }
+
+  // NO CLIENT → onboarding dashboard
+  if (path !== "/dashboard.html") {
+    window.location.href = "dashboard.html";
   }
 }
 
 checkAuth();
-
 
 // ─────────────────────────────────────
 // GOOGLE LOGIN
@@ -47,11 +60,10 @@ document.getElementById("googleLoginBtn")?.addEventListener("click", async () =>
   await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}/dashboard.html`
+      redirectTo: `${window.location.origin}/login.html`
     }
   });
 });
-
 
 // ─────────────────────────────────────
 // EMAIL LOGIN
@@ -72,17 +84,6 @@ async function handleEmailLogin() {
   }
 }
 
-document.getElementById("emailLoginBtn")
+document
+  .getElementById("emailLoginBtn")
   ?.addEventListener("click", handleEmailLogin);
-
-
-// ─────────────────────────────────────
-// GUARD (PREVENT RANDOM INDEX REDIRECTS)
-// ─────────────────────────────────────
-if (window.location.pathname.includes("login.html")) {
-  supabase.auth.getSession().then(({ data }) => {
-    if (data.session) {
-      window.location.href = "dashboard.html";
-    }
-  });
-}

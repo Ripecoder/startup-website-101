@@ -20,6 +20,23 @@ if (error || !data?.session) {
 const session = data.session;
 const user = session.user;
 
+// ── CHECK IF CLIENT ALREADY EXISTS ─────────────
+
+const res = await fetch(
+  `https://website-server-9b3o.onrender.com/api/client/check?email=${user.email}`
+);
+
+const data = await res.json();
+
+if (data.exists) {
+  sessionStorage.setItem("verbe_api_key", data.api_key);
+  sessionStorage.setItem("verbe_website", data.website);
+
+  // skip onboarding
+  document.getElementById("step1")?.classList.add("hidden");
+  document.getElementById("step2")?.classList.add("hidden");
+}
+
 // ── UI elements ──────────────────────────
 const emailEl  = document.getElementById("userEmail");
 const avatarEl = document.getElementById("userAvatar");
