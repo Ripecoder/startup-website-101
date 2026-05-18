@@ -20,42 +20,31 @@ if (error || !data?.session) {
 const session = data.session;
 const user = session.user;
 
-// ── CHECK IF CLIENT ALREADY EXISTS ─────────────
+const rawClientData = sessionStorage.getItem("client_data");
 
-const res = await fetch(
-  `https://website-server-9b3o.onrender.com/api/client/check?email=${user.email}`
-);
-
-const data = await res.json();
-
-if (data.exists) {
-  sessionStorage.setItem("verbe_api_key", data.api_key);
-  sessionStorage.setItem("verbe_website", data.website);
-
-  // skip onboarding
-  document.getElementById("step1")?.classList.add("hidden");
-  document.getElementById("step2")?.classList.add("hidden");
+if (!rawClientData) {
+  window.location.href = "login.html";
+  throw new Error("Missing client_data");
 }
+
+const clientData = JSON.parse(rawClientData);
+
+const email = clientData.email;
+const apiKey = clientData.api_key;
 
 // ── UI elements ──────────────────────────
 const emailEl  = document.getElementById("userEmail");
 const avatarEl = document.getElementById("userAvatar");
 
 // ── User display ─────────────────────────
-const email = user.email || "Unknown";
+
 emailEl.textContent = email;
 avatarEl.textContent = email.charAt(0).toUpperCase();
 
+//bro what to do of the two lines below?
 const emailInput = document.getElementById("userEmailInput");
 if (emailInput) emailInput.value = email;
 
-// ── API KEY ──────────────────────────────
-function generateApiKey(userId) {
-  return `vrb_live_${userId.replace(/-/g, "").substring(0, 20)}`;
-}
-
-const apiKey = generateApiKey(user.id);
-sessionStorage.setItem("verbe_api_key", apiKey);
 
 // ── API key UI ───────────────────────────
 const apikeyDisplay = document.getElementById("apikeyDisplay");
@@ -99,7 +88,7 @@ window.goToStep2 = async function () {
   console.log("STEP 2 FUNCTION RUNNING");
 
   const name = document.getElementById("userName")?.value?.trim() || "";
-  const email = document.getElementById("userEmailInput")?.value?.trim() || "";
+  const email = user.email;
   const phone = document.getElementById("userPhone")?.value?.trim() || "";
   const website = document.getElementById("userWebsite")?.value?.trim() || "";
   const website_name = document.getElementById("userWebsiteName")?.value?.trim() || "";
@@ -122,7 +111,7 @@ window.goToStep2 = async function () {
   errorEl.textContent = "";
 
   try {
-    const res = await fetch("https://website-server-9b3o.onrender.com/api/client", {
+    const res = await fetch("https://website-server-9b3o.onrender.com/api/client/store", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -142,10 +131,6 @@ window.goToStep2 = async function () {
     if (!res.ok || !data.success) {
       errorEl.textContent = "Server error";
       return;
-    }
-
-    if (data.client_api_key) {
-      sessionStorage.setItem("verbe_api_key", data.client_api_key);
     }
 
   } catch (err) {
@@ -192,7 +177,7 @@ window.goToStep3 = function() {
 
 // ── script builder ─────────────────────
 function buildScriptTag(key, website_name) {
-  return `<!-- Verbe Chatbot -->
+  return `<!-- FunnelOS Chatbot -->
 <script src="https://chatbot-connect.vercel.app/chatbot.js" data-key="${key}" data-client_name="${website_name}"><\/script>`;
 }
 

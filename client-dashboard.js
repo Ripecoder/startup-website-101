@@ -4,6 +4,9 @@
 // ───────────────────────────────────────
 
 // ── ELEMENTS ───────────────────────────
+// UI AFFECT: YES
+// These grab HTML elements from the page.
+// If IDs change in HTML, dashboard breaks visually.
 
 const leadsContainer = document.getElementById("leadsContainer");
 
@@ -17,11 +20,16 @@ const trialFillEl = document.getElementById("trialFill");
 const upgradeBtn = document.getElementById("upgradeBtn");
 
 // ── API KEY (CRITICAL) ──────────────────
+// UI AFFECT: NO
+// Pure backend/session logic.
+// Used to securely fetch leads.
 
-// stored during login / onboarding
 const apiKey = sessionStorage.getItem("verbe_api_key");
 
 // ── LOCAL STORAGE ──────────────────────
+// UI AFFECT: INDIRECT
+// Stores persistent browser-side data.
+// Affects stats/trial display later.
 
 if (!localStorage.getItem("verbe_trial_start")) {
   localStorage.setItem("verbe_trial_start", Date.now());
@@ -32,6 +40,8 @@ if (!localStorage.getItem("verbe_attended")) {
 }
 
 // ── TRIAL UI ───────────────────────────
+// UI AFFECT: YES
+// Updates trial progress bar and text.
 
 function updateTrialUI() {
   const start = parseInt(localStorage.getItem("verbe_trial_start"));
@@ -57,6 +67,9 @@ function updateTrialUI() {
 updateTrialUI();
 
 // ── FORMAT TIME ────────────────────────
+// UI AFFECT: INDIRECT
+// Pure formatting helper.
+// Changes displayed timestamps only.
 
 function formatTime(timestamp) {
   if (!timestamp) return "Just now";
@@ -87,6 +100,8 @@ function formatTime(timestamp) {
 }
 
 // ── CREATE LEAD CARD ───────────────────
+// UI AFFECT: MASSIVE
+// Dynamically builds lead cards shown on dashboard.
 
 function createLeadCard(lead) {
   const card = document.createElement("div");
@@ -142,6 +157,8 @@ function createLeadCard(lead) {
 }
 
 // ── LOAD LEADS (TENANT-SAFE) ───────────
+// UI AFFECT: MASSIVE
+// Fetches leads from Flask backend and renders dashboard.
 
 let loading = false;
 
@@ -204,10 +221,14 @@ async function loadLeads() {
 loadLeads();
 
 // ── AUTO REFRESH ───────────────────────
+// UI AFFECT: YES
+// Refreshes dashboard every minute.
 
 setInterval(loadLeads, 60000);
 
 // ── STATS ──────────────────────────────
+// UI AFFECT: YES
+// Updates attended leads counter.
 
 function updateStats() {
   const attended = parseInt(localStorage.getItem("verbe_attended"));
@@ -215,12 +236,16 @@ function updateStats() {
 }
 
 // ── UPGRADE BUTTON ─────────────────────
+// UI AFFECT: YES
+// Button click routing only.
 
 upgradeBtn.addEventListener("click", () => {
   window.location.href = "payment.html";
 });
 
 // ── WEBSITE NAME ───────────────────────
+// UI AFFECT: YES
+// Shows website/business name on dashboard.
 
 const websiteName = sessionStorage.getItem("verbe_website");
 
@@ -229,6 +254,10 @@ if (websiteName) {
 }
 
 console.log("CLIENT DASHBOARD LOADED");
+
+// ── SCRIPT VIEW BUTTON ─────────────────
+// UI AFFECT: YES
+// Shows install script popup.
 
 const viewScriptBtn = document.getElementById("viewScriptBtn");
 
@@ -250,6 +279,10 @@ if (viewScriptBtn) {
   });
 }
 
+// ── COPY API KEY BUTTON ────────────────
+// UI AFFECT: YES
+// Clipboard + temporary button text.
+
 const copyApiKeyBtn = document.getElementById("copyApiKeyBtn");
 
 if (copyApiKeyBtn) {
@@ -267,6 +300,10 @@ if (copyApiKeyBtn) {
     }, 1200);
   });
 }
+
+// ── WHATSAPP BUTTON ────────────────────
+// UI AFFECT: YES
+// Placeholder feature popup only.
 
 const whatsappBtn = document.getElementById("whatsappSetupBtn");
 

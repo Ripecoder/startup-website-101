@@ -8,51 +8,68 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 // ─────────────────────────────────────
 // GET CLIENT STATUS FROM BACKEND
 // ─────────────────────────────────────
+
+// ─────────────────────────────────────
+// GET CLIENT STATUS FROM BACKEND
+// ─────────────────────────────────────
+
 async function getClientStatus(email) {
-  const res = await fetch(
-    `https://website-server-9b3o.onrender.com/api/client/status?email=${email}`
-  );
 
-  return await res.json();
+    const response = await fetch(
+        "https://website-server-9b3o.onrender.com/api/client/status",
+        {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                email: email
+            })
+        }
+    );
+
+    return await response.json();
 }
 
 // ─────────────────────────────────────
-// AUTH ROUTING CORE
+// CHECK AUTH + ROUTING
 // ─────────────────────────────────────
+
 async function checkAuth() {
-  const { data } = await supabase.auth.getSession();
 
-  const session = data.session;
+    const { data } = await supabase.auth.getSession();
 
-  const path = window.location.pathname;
-  const isLoginPage = path.includes("login.html");
+    const session = data.session;
 
-  if (!session) {
-    if (!isLoginPage) window.location.href = "login.html";
-    return;
-  }
+    // USER NOT LOGGED IN
+    if (!session) return;
 
-  const email = session.user.email;
-  const status = await getClientStatus(email);
+    // GET EMAIL
+    const email = session.user.email;
 
-  // CLIENT EXISTS → go to client dashboard
-  if (status.exists) {
-    sessionStorage.setItem("verbe_api_key", status.api_key);
+    // ASK FLASK SERVER
+    const status = await getClientStatus(email);
 
-    if (path !== "/client-dashboard.html") {
-      window.location.href = "client-dashboard.html";
+    // STORE CLIENT DATA FOR BOTH CASES
+    sessionStorage.setItem(
+        "client_data",
+        JSON.stringify(status.client_data)
+    );
+
+    // EXISTING CLIENT
+    if (status.exists) {
+
+        window.location.href = "client-dashboard.html";
+
+        return;
     }
-    return;
-  }
 
-  // NO CLIENT → onboarding dashboard
-  if (path !== "/dashboard.html") {
+    // NEW USER
     window.location.href = "dashboard.html";
-  }
 }
-
-checkAuth();
-
 // ─────────────────────────────────────
 // GOOGLE LOGIN
 // ─────────────────────────────────────
