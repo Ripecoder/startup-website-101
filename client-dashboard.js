@@ -26,11 +26,7 @@ if (!rawClientData) {
 const clientData = JSON.parse(rawClientData);
 const apiKey = clientData.api_key;
 
-// ── LOCAL STORAGE (UI ONLY) ─────────────
 
-if (!localStorage.getItem("verbe_attended")) {
-  localStorage.setItem("verbe_attended", "0");
-}
 
 // ── SUBSCRIPTION LOADER (DB TRUTH) ─────
 
@@ -95,6 +91,31 @@ function formatTime(timestamp) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+// ── UPDATE LEAD STATUS (BACKEND) ────────
+
+async function updateLeadStatus(leadId, attended) {
+  try {
+    const res = await fetch(
+      "https://website-server-9b3o.onrender.com/api/client/updateLeadStatus",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          api_key: apiKey,
+          lead_id: leadId,
+          attended: attended
+        })
+      }
+    );
+    const data = await res.json();
+    if (!data.success) {
+      console.log("Failed to update lead status:", data);
+    }
+  } catch (err) {
+    console.log("updateLeadStatus error:", err);
+  }
+}
+
 // ── CREATE LEAD CARD ────────────────────
 
 function createLeadCard(lead) {
@@ -116,7 +137,7 @@ function createLeadCard(lead) {
       </div>
 
       <label class="attended-wrap">
-        <input type="checkbox" class="attended-checkbox">
+        <input type="checkbox" class="attended-checkbox" ${lead.attended ? "checked" : ""}>
         <span>Attended</span>
       </label>
 
@@ -136,14 +157,7 @@ function createLeadCard(lead) {
   const checkbox = card.querySelector(".attended-checkbox");
 
   checkbox.addEventListener("change", () => {
-
-    let attended = parseInt(localStorage.getItem("verbe_attended"));
-
-    if (checkbox.checked) attended++;
-    else attended = Math.max(0, attended - 1);
-
-    localStorage.setItem("verbe_attended", attended);
-
+    updateLeadStatus(lead.id, checkbox.checked);
     updateStats();
   });
 
@@ -213,8 +227,8 @@ async function loadLeads() {
 // ── STATS ───────────────────────────────
 
 function updateStats() {
-  const attended = parseInt(localStorage.getItem("verbe_attended"));
-  attendedLeadsEl.textContent = attended;
+  const checked = document.querySelectorAll(".attended-checkbox:checked").length;
+  attendedLeadsEl.textContent = checked;
 }
 
 // ── UPGRADE BUTTON ──────────────────────
@@ -267,40 +281,89 @@ if (websiteName) {
   document.getElementById("websiteName").textContent = websiteName;
 }
 
-// ── SCRIPT VIEW ─────────────────────────
+// ── MODAL SYSTEM ────────────────────────
 
-document.getElementById("viewScriptBtn")?.addEventListener("click", () => {
+const modalOverlay = document.getElementById("modalOverlay");
+const modalTitle   = document.getElementById("modalTitle");
+const modalClose   = document.getElementById("modalClose");
+const apiKeyView   = document.getElementById("apiKeyView");
+const scriptView   = document.getElementById("scriptView");
+const apiKeyCode   = document.getElementById("apiKeyCode");
+const scriptCode   = document.getElementById("scriptCode");
 
-  const key = sessionStorage.getItem("verbe_api_key");
+function openModal(type) {
+  apiKeyView.classList.remove("active");
+  scriptView.classList.remove("active");
+
+  const key     = apiKey || "DEMO-API-KEY-XXXX-1234";
   const website = sessionStorage.getItem("verbe_website") || "your-site";
 
-  if (!key) return alert("API key missing");
+  if (type === "apikey") {
+    modalTitle.textContent = "Your API Key";
+    apiKeyCode.textContent = key;
+    apiKeyView.classList.add("active");
+  } else {
+    modalTitle.textContent = "Embed Script";
+    scriptCode.textContent =
+`<script\n  src="https://chatbot-connect.vercel.app/chatbot.js"\n  data-key="${key}"\n  data-client_name="${website}">\n<\/script>`;
+    scriptView.classList.add("active");
+  }
 
-  const script = `
-<script src="https://chatbot-connect.vercel.app/chatbot.js"
-  data-key="${key}"
-  data-client_name="${website}">
-</script>`;
+  modalOverlay.classList.add("open");
+}
 
-  alert(script);
+function closeModal() {
+  modalOverlay.classList.remove("open");
+}
+
+modalClose.addEventListener("click", closeModal);
+modalOverlay.addEventListener("click", (e) => {
+  if (e.target === modalOverlay) closeModal();
 });
 
-// ── COPY API KEY ────────────────────────
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeModal();
+});
 
-document.getElementById("copyApiKeyBtn")?.addEventListener("click", async () => {
+// ── SCRIPT VIEW BUTTON ───────────────────
 
-  const key = sessionStorage.getItem("verbe_api_key");
+document.getElementById("viewScriptBtn")?.addEventListener("click", () => {
+  openModal("script");
+});
 
-  if (!key) return;
+// ── COPY API KEY BUTTON ──────────────────
 
-  await navigator.clipboard.writeText(key);
+document.getElementById("copyApiKeyBtn")?.addEventListener("click", () => {
+  openModal("apikey");
+});
 
-  const btn = document.getElementById("copyApiKeyBtn");
-  btn.textContent = "Copied";
+// ── IN-MODAL COPY BUTTONS ────────────────
 
+async function copyToClipboard(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+  }
+  btn.textContent = "Copied!";
+  btn.classList.add("copied");
   setTimeout(() => {
-    btn.textContent = "Copy API Key";
-  }, 1200);
+    btn.textContent = "Copy";
+    btn.classList.remove("copied");
+  }, 1500);
+}
+
+document.getElementById("apiKeyCopyBtn")?.addEventListener("click", () => {
+  copyToClipboard(apiKeyCode.textContent, document.getElementById("apiKeyCopyBtn"));
+});
+
+document.getElementById("scriptCopyBtn")?.addEventListener("click", () => {
+  copyToClipboard(scriptCode.textContent, document.getElementById("scriptCopyBtn"));
 });
 
 // ── WHATSAPP BUTTON ─────────────────────
