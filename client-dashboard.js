@@ -1,5 +1,5 @@
 // ───────────────────────────────────────
-// VERBE — CLIENT DASHBOARD (FIXED)
+// VERBE — CLIENT DASHBOARD (FIXED CLEAN)
 // ───────────────────────────────────────
 
 // ── ELEMENTS ───────────────────────────
@@ -23,17 +23,27 @@ if (!rawClientData) {
   window.location.href = "login.html";
 }
 
-const clientData = JSON.parse(rawClientData);
+let clientData;
+
+try {
+  clientData = JSON.parse(rawClientData);
+} catch (e) {
+  sessionStorage.clear();
+  window.location.href = "login.html";
+}
+
+if (!clientData?.api_key) {
+  sessionStorage.clear();
+  window.location.href = "login.html";
+}
+
 const apiKey = clientData.api_key;
 
-// ── SUBSCRIPTION EXPIRY STATE ────────────
-// Derived from backend days — converted to ms so expiry check is timeLeftMs <= 0
+// ── SUBSCRIPTION STATE ──────────────────
 
-let timeLeftMs = Infinity; // safe default until backend responds
+let timeLeftMs = Infinity;
 
-
-
-// ── SUBSCRIPTION LOADER (DB TRUTH) ─────
+// ── SUBSCRIPTION LOADER ─────────────────
 
 async function loadSubscriptionTime() {
   try {
@@ -51,22 +61,22 @@ async function loadSubscriptionTime() {
     const days = data.subscription_time ?? 0;
     const usedFreeTrial = data.used_free_trial ?? false;
 
-    // ALWAYS store as string
     sessionStorage.setItem("subscription_time", String(days));
     sessionStorage.setItem("used_free_trial", String(usedFreeTrial));
 
     updateTrialFromDB(days);
+
+    // TRUE STATE FLAG (fixed scope issue)
+    window.__SUB_ACTIVE__ = days > 0;
 
   } catch (err) {
     console.log("Subscription error:", err);
   }
 }
 
-// ── TRIAL UI (DB DRIVEN) ───────────────
+// ── TRIAL UI ────────────────────────────
 
 function updateTrialFromDB(daysRemaining) {
-
-  // derive timeLeftMs from days — single source of truth for expiry
   timeLeftMs = (daysRemaining ?? 0) * 24 * 60 * 60 * 1000;
 
   updateSubscriptionBadge(daysRemaining);
@@ -88,9 +98,7 @@ function updateTrialFromDB(daysRemaining) {
 function formatTime(timestamp) {
   if (!timestamp) return "Just now";
 
-  const seconds = Math.floor(
-    (Date.now() - new Date(timestamp)) / 1000
-  );
+  const seconds = Math.floor((Date.now() - new Date(timestamp)) / 1000);
 
   if (seconds < 60) return `${seconds}s ago`;
   const minutes = Math.floor(seconds / 60);
@@ -101,7 +109,7 @@ function formatTime(timestamp) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-// ── UPDATE LEAD STATUS (BACKEND) ────────
+// ── UPDATE LEAD STATUS ──────────────────
 
 async function updateLeadStatus(leadId, attended) {
   try {
@@ -117,7 +125,9 @@ async function updateLeadStatus(leadId, attended) {
         })
       }
     );
+
     const data = await res.json();
+
     if (!data.success) {
       console.log("Failed to update lead status:", data);
     }
@@ -129,13 +139,11 @@ async function updateLeadStatus(leadId, attended) {
 // ── CREATE LEAD CARD ────────────────────
 
 function createLeadCard(lead) {
-
   const card = document.createElement("div");
   card.className = "lead-card";
 
   card.innerHTML = `
     <div class="lead-top">
-
       <div>
         <div class="lead-name">
           ${lead.intent || "New Lead"}
@@ -150,17 +158,14 @@ function createLeadCard(lead) {
         <input type="checkbox" class="attended-checkbox" ${lead.attended ? "checked" : ""}>
         <span>Attended</span>
       </label>
-
     </div>
 
     <div class="lead-details">
-
       <div class="lead-item">📞 ${lead.phoneno || "N/A"}</div>
       <div class="lead-item">💰 ${lead.budget || "N/A"}</div>
       <div class="lead-item">📍 ${lead.location || "N/A"}</div>
       <div class="lead-item">🏠 ${lead.bhk || "N/A"}</div>
       <div class="lead-item">✨ ${lead.special_preferences || "None"}</div>
-
     </div>
   `;
 
@@ -171,12 +176,14 @@ function createLeadCard(lead) {
     updateStats();
   });
 
-  // apply lock if subscription expired — derived directly from timeLeftMs
+  // LOCK LOGIC (fixed)
   if (timeLeftMs <= 0) {
     card.classList.add("lead-card--locked");
+
     const overlay = document.createElement("div");
     overlay.className = "lead-lock-overlay";
     overlay.innerHTML = `<span>🔒 Lead access locked — upgrade to continue</span>`;
+
     card.appendChild(overlay);
   }
 
@@ -188,12 +195,10 @@ function createLeadCard(lead) {
 let loading = false;
 
 async function loadLeads() {
-
   if (loading) return;
   loading = true;
 
   try {
-
     const res = await fetch(
       "https://website-server-9b3o.onrender.com/api/client/leads",
       {
@@ -208,15 +213,14 @@ async function loadLeads() {
     leadsContainer.innerHTML = "";
 
     if (!data.success || !data.leads) {
-      console.log("Lead fetch failed:", data);
       leadsContainer.innerHTML = `
         <div class="lead-card">
           <div class="lead-name">Server Error</div>
           <div class="lead-time">Could not load leads</div>
         </div>
-  `;    
-  return;
-}
+      `;
+      return;
+    }
 
     data.leads.reverse().forEach(createLeadCard);
 
@@ -248,14 +252,13 @@ function updateStats() {
 
 // ── UPGRADE BUTTON ──────────────────────
 
-upgradeBtn.addEventListener("click", () => {
+upgradeBtn?.addEventListener("click", () => {
   window.location.href = "payment.html";
 });
 
-// ── BOOTSTRAP (CRITICAL FIX) ─────────────
+// ── INIT ────────────────────────────────
 
 async function initDashboard() {
-
   if (!apiKey) {
     window.location.href = "login.html";
     return;
@@ -268,17 +271,21 @@ async function initDashboard() {
 
 document.addEventListener("DOMContentLoaded", initDashboard);
 
-
-// ── CLIENT NAME + SUBSCRIPTION BADGE ───
+// ── BADGE + NAME ────────────────────────
 
 const clientNameDisplay = document.getElementById("clientNameDisplay");
 const subscriptionBadge = document.getElementById("subscriptionBadge");
 
-const storedClientName = clientData.client_name || sessionStorage.getItem("verbe_website") || "Client";
-if (clientNameDisplay) clientNameDisplay.textContent = storedClientName;
+if (clientNameDisplay) {
+  clientNameDisplay.textContent =
+    clientData.client_name ||
+    sessionStorage.getItem("verbe_website") ||
+    "Client";
+}
 
 function updateSubscriptionBadge(days) {
   if (!subscriptionBadge) return;
+
   if (days > 14) {
     subscriptionBadge.textContent = "Active Plan";
     subscriptionBadge.classList.add("paid");
@@ -288,106 +295,9 @@ function updateSubscriptionBadge(days) {
   }
 }
 
-
-
 const websiteName = sessionStorage.getItem("verbe_website");
 
 if (websiteName) {
-  document.getElementById("websiteName").textContent = websiteName;
+  const el = document.getElementById("websiteName");
+  if (el) el.textContent = websiteName;
 }
-
-// ── MODAL + BUTTONS (DOM SAFE) ──────────
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  const modalOverlay = document.getElementById("modalOverlay");
-  const modalTitle   = document.getElementById("modalTitle");
-  const modalClose   = document.getElementById("modalClose");
-  const apiKeyView   = document.getElementById("apiKeyView");
-  const scriptView   = document.getElementById("scriptView");
-  const apiKeyCode   = document.getElementById("apiKeyCode");
-  const scriptCode   = document.getElementById("scriptCode");
-
-  // ── MODAL OPEN/CLOSE ──────────────────
-
-  function openModal(type) {
-    if (!modalOverlay) return;
-
-    apiKeyView.classList.remove("active");
-    scriptView.classList.remove("active");
-
-    const key     = apiKey || "DEMO-API-KEY-XXXX-1234";
-    const website = sessionStorage.getItem("verbe_website") || "your-site";
-
-    if (type === "apikey") {
-      modalTitle.textContent  = "Your API Key";
-      apiKeyCode.textContent  = key;
-      apiKeyView.classList.add("active");
-    } else {
-      modalTitle.textContent = "Embed Script";
-      scriptCode.textContent =
-`<script\n  src="https://chatbot-connect.vercel.app/chatbot.js"\n  data-key="${key}"\n  data-client_name="${website}">\n<\/script>`;
-      scriptView.classList.add("active");
-    }
-
-    modalOverlay.classList.add("open");
-  }
-
-  function closeModal() {
-    if (!modalOverlay) return;
-    modalOverlay.classList.remove("open");
-  }
-
-  if (modalClose)   modalClose.addEventListener("click", closeModal);
-  if (modalOverlay) modalOverlay.addEventListener("click", (e) => {
-    if (e.target === modalOverlay) closeModal();
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
-  });
-
-  // ── QUICK ACTION BUTTONS ──────────────
-
-  document.getElementById("viewScriptBtn")?.addEventListener("click", () => {
-    openModal("script");
-  });
-
-  document.getElementById("copyApiKeyBtn")?.addEventListener("click", () => {
-    openModal("apikey");
-  });
-
-  document.getElementById("whatsappSetupBtn")?.addEventListener("click", () => {
-    alert("WhatsApp integration is under development.");
-  });
-
-  // ── IN-MODAL COPY BUTTONS ─────────────
-
-  async function copyToClipboard(text, btn) {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-    }
-    btn.textContent = "Copied!";
-    btn.classList.add("copied");
-    setTimeout(() => {
-      btn.textContent = "Copy";
-      btn.classList.remove("copied");
-    }, 1500);
-  }
-
-  document.getElementById("apiKeyCopyBtn")?.addEventListener("click", () => {
-    copyToClipboard(apiKeyCode.textContent, document.getElementById("apiKeyCopyBtn"));
-  });
-
-  document.getElementById("scriptCopyBtn")?.addEventListener("click", () => {
-    copyToClipboard(scriptCode.textContent, document.getElementById("scriptCopyBtn"));
-  });
-
-});
