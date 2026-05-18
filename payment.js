@@ -1,94 +1,80 @@
-// ─────────────────────────────────────
-// PAYMENT.JS
-// ─────────────────────────────────────
-
 const payBtn = document.getElementById("payBtn");
 const trialBtn = document.getElementById("trialBtn");
 
-// Razorpay test key
 const RAZORPAY_KEY = "rzp_test_XXXXXXXXXXXXXXXX";
 
- async function storeSubscriptionTime(days) {
-  const clientData = JSON.parse(
-    sessionStorage.getItem("client_data")
-   );
+async function storeSubscriptionTime(days) {
 
-   if (!clientData) {
-     console.log("No client data found");
-    return;
-   }
+  const clientData = JSON.parse(sessionStorage.getItem("client_data"));
 
-   const response = await fetch(
-     "https://website-server-9b3o.onrender.com/api/client/time",
-     {
-       method: "POST",
-
-       headers: {
-        "Content-Type": "application/json"
-       },
-
-       body: JSON.stringify({
-         api_key: clientData.api_key,
-         subscription_time: days
-       })
-     }
-   );
-
-   const data = await response.json();
-
-   if (data.success) {
-    sessionStorage.setItem(
-
-       "subscription_time",
-       data.subscription_time
-     );
-
-     console.log("TIME STORED");
-   }
+  if (!clientData) {
+    console.log("No client data found");
+    return false;
   }
 
-// ─────────────────────────────────────
-// FREE TRIAL
-// ─────────────────────────────────────
+  const response = await fetch(
+    "https://website-server-9b3o.onrender.com/api/client/time/set",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: clientData.api_key,
+        subscription_time: days
+      })
+    }
+  );
 
-trialBtn.addEventListener("click", () => {
+  const data = await response.json();
 
-  await storeSubscriptionTime(14);
-  // redirect to actual leads dashboard
+  if (!data.success) {
+    console.log("FAILED TO STORE TIME");
+    return false;
+  }
+
+  sessionStorage.setItem("subscription_time", data.subscription_time);
+  return true;
+}
+trialBtn.addEventListener("click", async () => {
+
+  const ok = await storeSubscriptionTime(14);
+
+  if (!ok) return;
+
   window.location.href = "client-dashboard.html";
 });
-
-// ─────────────────────────────────────
-// PAID PLAN
-// ─────────────────────────────────────
-
 payBtn.addEventListener("click", async () => {
 
   payBtn.disabled = true;
   payBtn.innerText = "Opening Razorpay...";
 
   const options = {
-
     key: RAZORPAY_KEY,
-
-    amount: 499900, // ₹4999
-
+    amount: 499900,
     currency: "INR",
-
-    name: "Verbe AI",
-
+    name: "FunnelOS",
     description: "Monthly Subscription",
 
-    handler: function (response) {
+    handler: async function (response) {
+      try {
+        console.log("PAYMENT SUCCESS:", response);
 
-      console.log("PAYMENT SUCCESS:", response);
+        const ok = await storeSubscriptionTime(30);
 
-      storeSubscriptionTime(30)
-    },
+        if (!ok) {
+          alert("Failed to activate subscription");
+          payBtn.disabled = false;
+          payBtn.innerText = "Upgrade Now";
+          return;
+        }
 
-    prefill: {
-      name: "",
-      email: ""
+        window.location.href = "client-dashboard.html";
+
+      } catch (e) {
+        console.log("Razorpay handler error:", e);
+
+        payBtn.disabled = false;
+        payBtn.innerText = "Upgrade Now";
+      }
     },
 
     theme: {
@@ -98,12 +84,8 @@ payBtn.addEventListener("click", async () => {
 
   const rzp = new Razorpay(options);
 
-  rzp.on("payment.failed", function (response) {
-
-    console.error(response.error);
-
+  rzp.on("payment.failed", function () {
     alert("Payment failed.");
-
     payBtn.disabled = false;
     payBtn.innerText = "Upgrade Now";
   });

@@ -1,12 +1,8 @@
 // ───────────────────────────────────────
-// VERBE — CLIENT DASHBOARD
-// client-dashboard.js
+// VERBE — CLIENT DASHBOARD (FIXED)
 // ───────────────────────────────────────
 
 // ── ELEMENTS ───────────────────────────
-// UI AFFECT: YES
-// These grab HTML elements from the page.
-// If IDs change in HTML, dashboard breaks visually.
 
 const leadsContainer = document.getElementById("leadsContainer");
 
@@ -19,53 +15,67 @@ const trialFillEl = document.getElementById("trialFill");
 
 const upgradeBtn = document.getElementById("upgradeBtn");
 
-// ── API KEY (CRITICAL) ──────────────────
-// UI AFFECT: NO
-// Pure backend/session logic.
-// Used to securely fetch leads.
+// ── CLIENT DATA (SOURCE OF TRUTH) ───────
 
+const rawClientData = sessionStorage.getItem("client_data");
+
+if (!rawClientData) {
+  window.location.href = "login.html";
+}
+
+const clientData = JSON.parse(rawClientData);
 const apiKey = clientData.api_key;
 
-// ── LOCAL STORAGE ──────────────────────
-// UI AFFECT: INDIRECT
-// Stores persistent browser-side data.
-// Affects stats/trial display later.
+// ── LOCAL STORAGE (UI ONLY) ─────────────
 
 if (!localStorage.getItem("verbe_attended")) {
   localStorage.setItem("verbe_attended", "0");
 }
 
-// ── TRIAL UI ───────────────────────────
-// UI AFFECT: YES
-// Updates trial progress bar and text.
+// ── SUBSCRIPTION LOADER (DB TRUTH) ─────
 
-function updateTrialUI() {
-  const start = parseInt(localStorage.getItem("verbe_trial_start"));
-  const now = Date.now();
+async function loadSubscriptionTime() {
+  try {
 
-  const daysPassed = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-  const daysRemaining = 14 - daysPassed;
+    const res = await fetch(
+      `https://website-server-9b3o.onrender.com/api/client/time?api_key=${apiKey}`
+    );
 
-  const percentage = Math.max(0, ((14 - daysPassed) / 14) * 100);
+    const data = await res.json();
+
+    if (!data.success) {
+      console.log("Subscription fetch failed");
+      return;
+    }
+
+    const days = data.subscription_time ?? 0;
+
+    sessionStorage.setItem("subscription_time", days);
+
+    updateTrialFromDB(days);
+
+  } catch (err) {
+    console.log("Subscription error:", err);
+  }
+}
+
+// ── TRIAL UI (DB DRIVEN) ───────────────
+
+function updateTrialFromDB(daysRemaining) {
 
   if (daysRemaining <= 0) {
     trialDaysEl.textContent = "Trial Expired";
     trialFillEl.style.width = "0%";
-
-    document.getElementById("trialBadge").textContent = "Trial Expired";
     return;
   }
 
   trialDaysEl.textContent = `${daysRemaining} days remaining`;
+
+  const percentage = Math.max(0, (daysRemaining / 30) * 100);
   trialFillEl.style.width = `${percentage}%`;
 }
 
-updateTrialUI();
-
-// ── FORMAT TIME ────────────────────────
-// UI AFFECT: INDIRECT
-// Pure formatting helper.
-// Changes displayed timestamps only.
+// ── FORMAT TIME ─────────────────────────
 
 function formatTime(timestamp) {
   if (!timestamp) return "Just now";
@@ -74,32 +84,19 @@ function formatTime(timestamp) {
     (Date.now() - new Date(timestamp)) / 1000
   );
 
-  if (seconds < 60) {
-    return `${seconds}s ago`;
-  }
-
+  if (seconds < 60) return `${seconds}s ago`;
   const minutes = Math.floor(seconds / 60);
-
-  if (minutes < 60) {
-    return `${minutes}m ago`;
-  }
-
+  if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
 
-  if (hours < 24) {
-    return `${hours}h ago`;
-  }
-
-  const days = Math.floor(hours / 24);
-
-  return `${days}d ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
-// ── CREATE LEAD CARD ───────────────────
-// UI AFFECT: MASSIVE
-// Dynamically builds lead cards shown on dashboard.
+// ── CREATE LEAD CARD ────────────────────
 
 function createLeadCard(lead) {
+
   const card = document.createElement("div");
   card.className = "lead-card";
 
@@ -108,7 +105,7 @@ function createLeadCard(lead) {
 
       <div>
         <div class="lead-name">
-          ${lead.intent || lead.name || "New Lead"}
+          ${lead.intent || "New Lead"}
         </div>
 
         <div class="lead-time">
@@ -128,7 +125,7 @@ function createLeadCard(lead) {
       <div class="lead-item">📞 ${lead.phone || "N/A"}</div>
       <div class="lead-item">💰 ${lead.budget || "N/A"}</div>
       <div class="lead-item">📍 ${lead.location || "N/A"}</div>
-      <div class="lead-item">🏠 ${lead.bhk || "N/A"} BHK</div>
+      <div class="lead-item">🏠 ${lead.bhk || "N/A"}</div>
       <div class="lead-item">✨ ${lead.special_preferences || "None"}</div>
 
     </div>
@@ -137,60 +134,46 @@ function createLeadCard(lead) {
   const checkbox = card.querySelector(".attended-checkbox");
 
   checkbox.addEventListener("change", () => {
+
     let attended = parseInt(localStorage.getItem("verbe_attended"));
 
-    if (checkbox.checked) {
-      attended++;
-    } else {
-      attended = Math.max(0, attended - 1);
-    }
+    if (checkbox.checked) attended++;
+    else attended = Math.max(0, attended - 1);
 
     localStorage.setItem("verbe_attended", attended);
+
     updateStats();
   });
 
   leadsContainer.prepend(card);
 }
 
-// ── LOAD LEADS (TENANT-SAFE) ───────────
-// UI AFFECT: MASSIVE
-// Fetches leads from Flask backend and renders dashboard.
+// ── LOAD LEADS ──────────────────────────
 
 let loading = false;
 
 async function loadLeads() {
+
   if (loading) return;
   loading = true;
 
   try {
-    if (!apiKey) {
-      throw new Error("Missing API key");
-    }
 
     const res = await fetch(
       "https://website-server-9b3o.onrender.com/api/client/leads",
       {
         method: "POST",
-
-        headers: {
-          "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-          api_key: apiKey
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: apiKey })
       }
     );
-
-    if (!res.ok) {
-      throw new Error("HTTP " + res.status);
-    }
 
     const data = await res.json();
 
     leadsContainer.innerHTML = "";
 
     if (!data.leads || data.leads.length === 0) {
+
       leadsContainer.innerHTML = `
         <div class="lead-card">
           <div class="lead-name">No leads yet</div>
@@ -225,34 +208,36 @@ async function loadLeads() {
   }
 }
 
-loadLeads();
-
-// ── AUTO REFRESH ───────────────────────
-// UI AFFECT: YES
-// Refreshes dashboard every minute.
-
-setInterval(loadLeads, 60000);
-
-// ── STATS ──────────────────────────────
-// UI AFFECT: YES
-// Updates attended leads counter.
+// ── STATS ───────────────────────────────
 
 function updateStats() {
   const attended = parseInt(localStorage.getItem("verbe_attended"));
   attendedLeadsEl.textContent = attended;
 }
 
-// ── UPGRADE BUTTON ─────────────────────
-// UI AFFECT: YES
-// Button click routing only.
+// ── UPGRADE BUTTON ──────────────────────
 
 upgradeBtn.addEventListener("click", () => {
   window.location.href = "payment.html";
 });
 
-// ── WEBSITE NAME ───────────────────────
-// UI AFFECT: YES
-// Shows website/business name on dashboard.
+// ── BOOTSTRAP (CRITICAL FIX) ─────────────
+
+async function initDashboard() {
+
+  if (!apiKey) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  await loadSubscriptionTime();
+  await loadLeads();
+  updateStats();
+}
+
+document.addEventListener("DOMContentLoaded", initDashboard);
+
+// ── WEBSITE NAME ────────────────────────
 
 const websiteName = sessionStorage.getItem("verbe_website");
 
@@ -260,62 +245,44 @@ if (websiteName) {
   document.getElementById("websiteName").textContent = websiteName;
 }
 
-console.log("CLIENT DASHBOARD LOADED");
+// ── SCRIPT VIEW ─────────────────────────
 
-// ── SCRIPT VIEW BUTTON ─────────────────
-// UI AFFECT: YES
-// Shows install script popup.
+document.getElementById("viewScriptBtn")?.addEventListener("click", () => {
 
-const viewScriptBtn = document.getElementById("viewScriptBtn");
+  const key = sessionStorage.getItem("verbe_api_key");
+  const website = sessionStorage.getItem("verbe_website") || "your-site";
 
-if (viewScriptBtn) {
-  viewScriptBtn.addEventListener("click", () => {
-    const key = sessionStorage.getItem("verbe_api_key");
+  if (!key) return alert("API key missing");
 
-    if (!key) return alert("API key missing");
-
-    const website = sessionStorage.getItem("verbe_website") || "your-site";
-
-    const script = `
+  const script = `
 <script src="https://chatbot-connect.vercel.app/chatbot.js"
   data-key="${key}"
   data-client_name="${website}">
 </script>`;
 
-    alert("Copy this script:\n\n" + script);
-  });
-}
+  alert(script);
+});
 
-// ── COPY API KEY BUTTON ────────────────
-// UI AFFECT: YES
-// Clipboard + temporary button text.
+// ── COPY API KEY ────────────────────────
 
-const copyApiKeyBtn = document.getElementById("copyApiKeyBtn");
+document.getElementById("copyApiKeyBtn")?.addEventListener("click", async () => {
 
-if (copyApiKeyBtn) {
-  copyApiKeyBtn.addEventListener("click", async () => {
-    const key = sessionStorage.getItem("verbe_api_key");
+  const key = sessionStorage.getItem("verbe_api_key");
 
-    if (!key) return;
+  if (!key) return;
 
-    await navigator.clipboard.writeText(key);
+  await navigator.clipboard.writeText(key);
 
-    copyApiKeyBtn.textContent = "Copied";
+  const btn = document.getElementById("copyApiKeyBtn");
+  btn.textContent = "Copied";
 
-    setTimeout(() => {
-      copyApiKeyBtn.textContent = "Copy API Key";
-    }, 1200);
-  });
-}
+  setTimeout(() => {
+    btn.textContent = "Copy API Key";
+  }, 1200);
+});
 
-// ── WHATSAPP BUTTON ────────────────────
-// UI AFFECT: YES
-// Placeholder feature popup only.
+// ── WHATSAPP BUTTON ─────────────────────
 
-const whatsappBtn = document.getElementById("whatsappSetupBtn");
-
-if (whatsappBtn) {
-  whatsappBtn.addEventListener("click", () => {
-    alert("WhatsApp integration is under development.");
-  });
-}
+document.getElementById("whatsappSetupBtn")?.addEventListener("click", () => {
+  alert("WhatsApp integration is under development.");
+});
