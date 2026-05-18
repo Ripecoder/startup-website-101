@@ -100,7 +100,41 @@ body {
   font-weight: 600;
 }
 
-.live-status {
+.client-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.client-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.subscription-badge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.25);
+  color: var(--orange);
+}
+
+.subscription-badge.paid {
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.2);
+  color: var(--green);
+}
+
+.header-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+}
+
+
 
   display: flex;
 

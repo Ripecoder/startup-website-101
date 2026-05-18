@@ -63,6 +63,8 @@ async function loadSubscriptionTime() {
 
 function updateTrialFromDB(daysRemaining) {
 
+  updateSubscriptionBadge(daysRemaining);
+
   if (daysRemaining <= 0) {
     trialDaysEl.textContent = "Trial Expired";
     trialFillEl.style.width = "0%";
@@ -237,7 +239,27 @@ async function initDashboard() {
 
 document.addEventListener("DOMContentLoaded", initDashboard);
 
-// ── WEBSITE NAME ────────────────────────
+
+// ── CLIENT NAME + SUBSCRIPTION BADGE ───
+
+const clientNameDisplay = document.getElementById("clientNameDisplay");
+const subscriptionBadge = document.getElementById("subscriptionBadge");
+
+const storedClientName = clientData.client_name || sessionStorage.getItem("verbe_website") || "Client";
+if (clientNameDisplay) clientNameDisplay.textContent = storedClientName;
+
+function updateSubscriptionBadge(days) {
+  if (!subscriptionBadge) return;
+  if (days > 14) {
+    subscriptionBadge.textContent = "Active Plan";
+    subscriptionBadge.classList.add("paid");
+  } else {
+    subscriptionBadge.textContent = "Free Trial";
+    subscriptionBadge.classList.remove("paid");
+  }
+}
+
+
 
 const websiteName = sessionStorage.getItem("verbe_website");
 
