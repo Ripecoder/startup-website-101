@@ -281,93 +281,98 @@ if (websiteName) {
   document.getElementById("websiteName").textContent = websiteName;
 }
 
-// ── MODAL SYSTEM ────────────────────────
+// ── MODAL + BUTTONS (DOM SAFE) ──────────
 
-const modalOverlay = document.getElementById("modalOverlay");
-const modalTitle   = document.getElementById("modalTitle");
-const modalClose   = document.getElementById("modalClose");
-const apiKeyView   = document.getElementById("apiKeyView");
-const scriptView   = document.getElementById("scriptView");
-const apiKeyCode   = document.getElementById("apiKeyCode");
-const scriptCode   = document.getElementById("scriptCode");
+document.addEventListener("DOMContentLoaded", () => {
 
-function openModal(type) {
-  apiKeyView.classList.remove("active");
-  scriptView.classList.remove("active");
+  const modalOverlay = document.getElementById("modalOverlay");
+  const modalTitle   = document.getElementById("modalTitle");
+  const modalClose   = document.getElementById("modalClose");
+  const apiKeyView   = document.getElementById("apiKeyView");
+  const scriptView   = document.getElementById("scriptView");
+  const apiKeyCode   = document.getElementById("apiKeyCode");
+  const scriptCode   = document.getElementById("scriptCode");
 
-  const key     = apiKey || "DEMO-API-KEY-XXXX-1234";
-  const website = sessionStorage.getItem("verbe_website") || "your-site";
+  // ── MODAL OPEN/CLOSE ──────────────────
 
-  if (type === "apikey") {
-    modalTitle.textContent = "Your API Key";
-    apiKeyCode.textContent = key;
-    apiKeyView.classList.add("active");
-  } else {
-    modalTitle.textContent = "Embed Script";
-    scriptCode.textContent =
+  function openModal(type) {
+    if (!modalOverlay) return;
+
+    apiKeyView.classList.remove("active");
+    scriptView.classList.remove("active");
+
+    const key     = apiKey || "DEMO-API-KEY-XXXX-1234";
+    const website = sessionStorage.getItem("verbe_website") || "your-site";
+
+    if (type === "apikey") {
+      modalTitle.textContent  = "Your API Key";
+      apiKeyCode.textContent  = key;
+      apiKeyView.classList.add("active");
+    } else {
+      modalTitle.textContent = "Embed Script";
+      scriptCode.textContent =
 `<script\n  src="https://chatbot-connect.vercel.app/chatbot.js"\n  data-key="${key}"\n  data-client_name="${website}">\n<\/script>`;
-    scriptView.classList.add("active");
+      scriptView.classList.add("active");
+    }
+
+    modalOverlay.classList.add("open");
   }
 
-  modalOverlay.classList.add("open");
-}
-
-function closeModal() {
-  modalOverlay.classList.remove("open");
-}
-
-modalClose.addEventListener("click", closeModal);
-modalOverlay.addEventListener("click", (e) => {
-  if (e.target === modalOverlay) closeModal();
-});
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeModal();
-});
-
-// ── SCRIPT VIEW BUTTON ───────────────────
-
-document.getElementById("viewScriptBtn")?.addEventListener("click", () => {
-  openModal("script");
-});
-
-// ── COPY API KEY BUTTON ──────────────────
-
-document.getElementById("copyApiKeyBtn")?.addEventListener("click", () => {
-  openModal("apikey");
-});
-
-// ── IN-MODAL COPY BUTTONS ────────────────
-
-async function copyToClipboard(text, btn) {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    document.body.removeChild(ta);
+  function closeModal() {
+    if (!modalOverlay) return;
+    modalOverlay.classList.remove("open");
   }
-  btn.textContent = "Copied!";
-  btn.classList.add("copied");
-  setTimeout(() => {
-    btn.textContent = "Copy";
-    btn.classList.remove("copied");
-  }, 1500);
-}
 
-document.getElementById("apiKeyCopyBtn")?.addEventListener("click", () => {
-  copyToClipboard(apiKeyCode.textContent, document.getElementById("apiKeyCopyBtn"));
-});
+  if (modalClose)   modalClose.addEventListener("click", closeModal);
+  if (modalOverlay) modalOverlay.addEventListener("click", (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
 
-document.getElementById("scriptCopyBtn")?.addEventListener("click", () => {
-  copyToClipboard(scriptCode.textContent, document.getElementById("scriptCopyBtn"));
-});
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
 
-// ── WHATSAPP BUTTON ─────────────────────
+  // ── QUICK ACTION BUTTONS ──────────────
 
-document.getElementById("whatsappSetupBtn")?.addEventListener("click", () => {
-  alert("WhatsApp integration is under development.");
+  document.getElementById("viewScriptBtn")?.addEventListener("click", () => {
+    openModal("script");
+  });
+
+  document.getElementById("copyApiKeyBtn")?.addEventListener("click", () => {
+    openModal("apikey");
+  });
+
+  document.getElementById("whatsappSetupBtn")?.addEventListener("click", () => {
+    alert("WhatsApp integration is under development.");
+  });
+
+  // ── IN-MODAL COPY BUTTONS ─────────────
+
+  async function copyToClipboard(text, btn) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    btn.textContent = "Copied!";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "Copy";
+      btn.classList.remove("copied");
+    }, 1500);
+  }
+
+  document.getElementById("apiKeyCopyBtn")?.addEventListener("click", () => {
+    copyToClipboard(apiKeyCode.textContent, document.getElementById("apiKeyCopyBtn"));
+  });
+
+  document.getElementById("scriptCopyBtn")?.addEventListener("click", () => {
+    copyToClipboard(scriptCode.textContent, document.getElementById("scriptCopyBtn"));
+  });
+
 });
