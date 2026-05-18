@@ -40,54 +40,47 @@ async function getClientStatus(email) {
 
 async function checkAuth() {
 
-    const { data, error } = await supabase.auth.getSession();
+    // 1. GET SESSION (local)
+    const { data: sessionData } = await supabase.auth.getSession();
+    const session = sessionData?.session;
 
-    console.log("SESSION:", data?.session);
-    console.log("AUTH ERROR:", error);
+    console.log("SESSION:", session);
 
-    const session = data.session;
-
-    // USER NOT LOGGED IN
     if (!session) {
-      console.log("NO SESSION FOUND");
-      return;
+        console.log("NO SESSION FOUND");
+        return;
     }
 
-    // GET EMAIL
-    const email = session.user.email;
+    // 2. FORCE REAL USER VALIDATION (IMPORTANT FIX)
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData?.user;
 
-    // ASK FLASK SERVER
+    // if token is stale or user deleted → kill session
+    if (!user) {
+        console.log("INVALID SESSION → SIGNING OUT");
+        await supabase.auth.signOut();
+        return;
+    }
+
+    // 3. GET EMAIL FROM VERIFIED USER (NOT SESSION)
+    const email = user.email;
+
+    // 4. BACKEND CHECK
     const status = await getClientStatus(email);
 
-    // STORE CLIENT DATA FOR BOTH CASES
+    // 5. STORE CLIENT DATA
     sessionStorage.setItem(
         "client_data",
         JSON.stringify(status.client_data)
     );
 
-    // EXISTING CLIENT
+    // 6. ROUTING LOGIC
     if (status.exists) {
-
         window.location.href = "client-dashboard.html";
-
-        return;
+    } else {
+        window.location.href = "dashboard.html";
     }
-
-    // NEW USER
-    window.location.href = "dashboard.html";
 }
-
-// ─────────────────────────────────────
-// GOOGLE LOGIN
-// ─────────────────────────────────────
-document.getElementById("googleLoginBtn")?.addEventListener("click", async () => {
-  await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/login.html`
-    }
-  });
-});
 
 // ─────────────────────────────────────
 // EMAIL LOGIN
