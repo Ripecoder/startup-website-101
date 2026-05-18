@@ -16,7 +16,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 async function getClientStatus(email) {
 
     const response = await fetch(
-        "https://website-server-9b3o.onrender.com/api/client/status",
+        "https://website-server-9b3o.onrender.com/api/client/auth",
         {
 
             method: "POST",
