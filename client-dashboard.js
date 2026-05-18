@@ -24,16 +24,12 @@ const upgradeBtn = document.getElementById("upgradeBtn");
 // Pure backend/session logic.
 // Used to securely fetch leads.
 
-const apiKey = sessionStorage.getItem("verbe_api_key");
+const apiKey = clientData.api_key;
 
 // ── LOCAL STORAGE ──────────────────────
 // UI AFFECT: INDIRECT
 // Stores persistent browser-side data.
 // Affects stats/trial display later.
-
-if (!localStorage.getItem("verbe_trial_start")) {
-  localStorage.setItem("verbe_trial_start", Date.now());
-}
 
 if (!localStorage.getItem("verbe_attended")) {
   localStorage.setItem("verbe_attended", "0");
@@ -172,7 +168,18 @@ async function loadLeads() {
     }
 
     const res = await fetch(
-      `https://website-server-9b3o.onrender.com/api/client?api_key=${apiKey}`
+      "https://website-server-9b3o.onrender.com/api/client/leads",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          api_key: apiKey
+        })
+      }
     );
 
     if (!res.ok) {

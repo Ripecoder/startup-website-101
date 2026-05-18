@@ -1,7 +1,7 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 const SUPABASE_URL  = "https://wbwmffhegokbnfgtfufz.supabase.co";
-const SUPABASE_ANON = "YOUR_ANON_KEY";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indid21mZmhlZ29rYm5mZ3RmdWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMzYzNTcsImV4cCI6MjA5MzYxMjM1N30.7KNAJ_nZwqbdFMlRmEclGPoGx2ywTUmVwn3LxfdBF-w";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -40,12 +40,18 @@ async function getClientStatus(email) {
 
 async function checkAuth() {
 
-    const { data } = await supabase.auth.getSession();
+    const { data, error } = await supabase.auth.getSession();
+
+    console.log("SESSION:", data?.session);
+    console.log("AUTH ERROR:", error);
 
     const session = data.session;
 
     // USER NOT LOGGED IN
-    if (!session) return;
+    if (!session) {
+      console.log("NO SESSION FOUND");
+      return;
+    }
 
     // GET EMAIL
     const email = session.user.email;
@@ -70,6 +76,7 @@ async function checkAuth() {
     // NEW USER
     window.location.href = "dashboard.html";
 }
+
 // ─────────────────────────────────────
 // GOOGLE LOGIN
 // ─────────────────────────────────────
@@ -104,3 +111,4 @@ async function handleEmailLogin() {
 document
   .getElementById("emailLoginBtn")
   ?.addEventListener("click", handleEmailLogin);
+checkAuth();

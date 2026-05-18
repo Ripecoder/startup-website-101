@@ -8,15 +8,52 @@ const trialBtn = document.getElementById("trialBtn");
 // Razorpay test key
 const RAZORPAY_KEY = "rzp_test_XXXXXXXXXXXXXXXX";
 
+ async function storeSubscriptionTime(days) {
+  const clientData = JSON.parse(
+    sessionStorage.getItem("client_data")
+   );
+
+   if (!clientData) {
+     console.log("No client data found");
+    return;
+   }
+
+   const response = await fetch(
+     "https://website-server-9b3o.onrender.com/api/client/time",
+     {
+       method: "POST",
+
+       headers: {
+        "Content-Type": "application/json"
+       },
+
+       body: JSON.stringify({
+         api_key: clientData.api_key,
+         subscription_time: days
+       })
+     }
+   );
+
+   const data = await response.json();
+
+   if (data.success) {
+    sessionStorage.setItem(
+
+       "subscription_time",
+       data.subscription_time
+     );
+
+     console.log("TIME STORED");
+   }
+  }
+
 // ─────────────────────────────────────
 // FREE TRIAL
 // ─────────────────────────────────────
 
 trialBtn.addEventListener("click", () => {
 
-  localStorage.setItem("verbe_trial_active", "true");
-  localStorage.setItem("verbe_trial_start", Date.now());
-
+  await storeSubscriptionTime(14);
   // redirect to actual leads dashboard
   window.location.href = "client-dashboard.html";
 });
@@ -46,13 +83,7 @@ payBtn.addEventListener("click", async () => {
 
       console.log("PAYMENT SUCCESS:", response);
 
-      localStorage.setItem("verbe_paid", "true");
-
-      // remove trial if exists
-      localStorage.removeItem("verbe_trial_active");
-
-      // redirect
-      window.location.href = "client-dashboard.html";
+      storeSubscriptionTime(30)
     },
 
     prefill: {
