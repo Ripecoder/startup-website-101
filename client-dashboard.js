@@ -153,7 +153,7 @@ function createLeadCard(lead) {
 
     <div class="lead-details">
 
-      <div class="lead-item">📞 ${lead.phone || "N/A"}</div>
+      <div class="lead-item">📞 ${lead.phoneno || "N/A"}</div>
       <div class="lead-item">💰 ${lead.budget || "N/A"}</div>
       <div class="lead-item">📍 ${lead.location || "N/A"}</div>
       <div class="lead-item">🏠 ${lead.bhk || "N/A"}</div>
@@ -205,20 +205,16 @@ async function loadLeads() {
 
     leadsContainer.innerHTML = "";
 
-    if (!data.leads || data.leads.length === 0) {
-
+    if (!data.success || !data.leads) {
+      console.log("Lead fetch failed:", data);
       leadsContainer.innerHTML = `
         <div class="lead-card">
-          <div class="lead-name">No leads yet</div>
-          <div class="lead-time">Waiting for visitors...</div>
+          <div class="lead-name">Server Error</div>
+          <div class="lead-time">Could not load leads</div>
         </div>
-      `;
-
-      leadsTodayEl.textContent = "0";
-      totalLeadsEl.textContent = "0";
-      updateStats();
-      return;
-    }
+  `;    
+  return;
+}
 
     data.leads.reverse().forEach(createLeadCard);
 
