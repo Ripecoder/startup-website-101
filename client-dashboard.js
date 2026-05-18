@@ -26,6 +26,11 @@ if (!rawClientData) {
 const clientData = JSON.parse(rawClientData);
 const apiKey = clientData.api_key;
 
+// ── SUBSCRIPTION EXPIRY STATE ────────────
+// Derived from backend days — converted to ms so expiry check is timeLeftMs <= 0
+
+let timeLeftMs = Infinity; // safe default until backend responds
+
 
 
 // ── SUBSCRIPTION LOADER (DB TRUTH) ─────
@@ -58,6 +63,9 @@ async function loadSubscriptionTime() {
 // ── TRIAL UI (DB DRIVEN) ───────────────
 
 function updateTrialFromDB(daysRemaining) {
+
+  // derive timeLeftMs from days — single source of truth for expiry
+  timeLeftMs = (daysRemaining ?? 0) * 24 * 60 * 60 * 1000;
 
   updateSubscriptionBadge(daysRemaining);
 
@@ -160,6 +168,15 @@ function createLeadCard(lead) {
     updateLeadStatus(lead.id, checkbox.checked);
     updateStats();
   });
+
+  // apply lock if subscription expired — derived directly from timeLeftMs
+  if (timeLeftMs <= 0) {
+    card.classList.add("lead-card--locked");
+    const overlay = document.createElement("div");
+    overlay.className = "lead-lock-overlay";
+    overlay.innerHTML = `<span>🔒 Lead access locked — upgrade to continue</span>`;
+    card.appendChild(overlay);
+  }
 
   leadsContainer.prepend(card);
 }
