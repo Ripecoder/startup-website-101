@@ -1,7 +1,7 @@
 const payBtn   = document.getElementById("payBtn");
 const trialBtn = document.getElementById("trialBtn");
 const trialCard = document.getElementById("trialCard");
-
+let usedFreeTrial = false;
 const RAZORPAY_KEY = "rzp_test_XXXXXXXXXXXXXXXX";
 
 // ── HELPERS ─────────────────────────────
@@ -21,11 +21,17 @@ async function checkTrialStatus() {
     const res = await fetch(
       `https://website-server-9b3o.onrender.com/api/client/trialStatus?api_key=${clientData.api_key}`
     );
+
     const data = await res.json();
 
-    if (data.success && data.used_free_trial === true) {
-      if (trialCard) trialCard.remove();
+    if (data.success) {
+      usedFreeTrial = data.used_free_trial === true;
+
+      if (usedFreeTrial && trialCard) {
+        trialCard.remove();
+      }
     }
+
   } catch (err) {
     console.log("Trial status check error:", err);
   }
@@ -62,6 +68,9 @@ async function storeSubscriptionTime(days) {
   }
 
   sessionStorage.setItem("subscription_time", data.subscription_time);
+  if (days === 14) {
+    sessionStorage.setItem("used_free_trial","true")
+  }
   return true;
 }
 

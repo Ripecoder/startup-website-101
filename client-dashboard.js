@@ -37,7 +37,6 @@ let timeLeftMs = Infinity; // safe default until backend responds
 
 async function loadSubscriptionTime() {
   try {
-
     const res = await fetch(
       `https://website-server-9b3o.onrender.com/api/client/time?api_key=${apiKey}`
     );
@@ -50,8 +49,11 @@ async function loadSubscriptionTime() {
     }
 
     const days = data.subscription_time ?? 0;
+    const usedFreeTrial = data.used_free_trial ?? false;
 
-    sessionStorage.setItem("subscription_time", days);
+    // ALWAYS store as string
+    sessionStorage.setItem("subscription_time", String(days));
+    sessionStorage.setItem("used_free_trial", String(usedFreeTrial));
 
     updateTrialFromDB(days);
 
