@@ -1,11 +1,41 @@
-const payBtn = document.getElementById("payBtn");
+const payBtn   = document.getElementById("payBtn");
 const trialBtn = document.getElementById("trialBtn");
+const trialCard = document.getElementById("trialCard");
 
 const RAZORPAY_KEY = "rzp_test_XXXXXXXXXXXXXXXX";
 
-async function storeSubscriptionTime(days) {
+// ── HELPERS ─────────────────────────────
 
-  const clientData = JSON.parse(sessionStorage.getItem("client_data"));
+function getClientData() {
+  return JSON.parse(sessionStorage.getItem("client_data"));
+}
+
+// ── CHECK FREE TRIAL STATUS ON LOAD ─────
+// If client has already used their free trial, remove the trial card entirely
+
+async function checkTrialStatus() {
+  const clientData = getClientData();
+  if (!clientData) return;
+
+  try {
+    const res = await fetch(
+      `https://website-server-9b3o.onrender.com/api/client/trialStatus?api_key=${clientData.api_key}`
+    );
+    const data = await res.json();
+
+    if (data.success && data.used_free_trial === true) {
+      if (trialCard) trialCard.remove();
+    }
+  } catch (err) {
+    console.log("Trial status check error:", err);
+  }
+}
+
+// ── STORE SUBSCRIPTION TIME ──────────────
+// When days = 14, backend also sets used_free_trial = true automatically
+
+async function storeSubscriptionTime(days) {
+  const clientData = getClientData();
 
   if (!clientData) {
     console.log("No client data found");
@@ -34,16 +64,27 @@ async function storeSubscriptionTime(days) {
   sessionStorage.setItem("subscription_time", data.subscription_time);
   return true;
 }
-trialBtn.addEventListener("click", async () => {
+
+// ── TRIAL BUTTON ─────────────────────────
+
+trialBtn?.addEventListener("click", async () => {
+  trialBtn.disabled = true;
+  trialBtn.innerText = "Activating...";
 
   const ok = await storeSubscriptionTime(14);
 
-  if (!ok) return;
+  if (!ok) {
+    trialBtn.disabled = false;
+    trialBtn.innerText = "Start Free Trial";
+    return;
+  }
 
   window.location.href = "client-dashboard.html";
 });
-payBtn.addEventListener("click", async () => {
 
+// ── PAY BUTTON ───────────────────────────
+
+payBtn.addEventListener("click", async () => {
   payBtn.disabled = true;
   payBtn.innerText = "Opening Razorpay...";
 
@@ -71,7 +112,6 @@ payBtn.addEventListener("click", async () => {
 
       } catch (e) {
         console.log("Razorpay handler error:", e);
-
         payBtn.disabled = false;
         payBtn.innerText = "Upgrade Now";
       }
@@ -92,3 +132,7 @@ payBtn.addEventListener("click", async () => {
 
   rzp.open();
 });
+
+// ── INIT ─────────────────────────────────
+
+checkTrialStatus();
