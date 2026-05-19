@@ -1,157 +1,230 @@
-// ───────────────────────────────────────
-// VERBE — CLIENT DASHBOARD (FIXED CLEAN)
-// ───────────────────────────────────────
+/* =========================================================
+   VERBE - client-dashboard.js
+   Client dashboard view backed by the server as source of truth.
+   ========================================================= */
 
-// ── ELEMENTS ───────────────────────────
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const SUPABASE_URL = "https://wbwmffhegokbnfgtfufz.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indid21mZmhlZ29rYm5mZ3RmdWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMzYzNTcsImV4cCI6MjA5MzYxMjM1N30.7KNAJ_nZwqbdFMlRmEclGPoGx2ywTUmVwn3LxfdBF-w";
+const API_BASE_URL = "https://website-server-9b3o.onrender.com";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let clientData = null;
+let leads = [];
+let subscriptionDays = 0;
+let loadingLeads = false;
 
 const leadsContainer = document.getElementById("leadsContainer");
-
 const leadsTodayEl = document.getElementById("leadsToday");
 const totalLeadsEl = document.getElementById("totalLeads");
 const attendedLeadsEl = document.getElementById("attendedLeads");
-
 const trialDaysEl = document.getElementById("trialDays");
 const trialFillEl = document.getElementById("trialFill");
-
 const upgradeBtn = document.getElementById("upgradeBtn");
+const clientNameDisplay = document.getElementById("clientNameDisplay");
+const subscriptionBadge = document.getElementById("subscriptionBadge");
+const websiteNameEl = document.getElementById("websiteName");
 
-// ── CLIENT DATA (SOURCE OF TRUTH) ───────
+const modalOverlay = document.getElementById("modalOverlay");
+const modalTitle = document.getElementById("modalTitle");
+const modalClose = document.getElementById("modalClose");
+const apiKeyView = document.getElementById("apiKeyView");
+const scriptView = document.getElementById("scriptView");
+const apiKeyCode = document.getElementById("apiKeyCode");
+const scriptCode = document.getElementById("scriptCode");
 
-const rawClientData = sessionStorage.getItem("client_data");
-
-if (!rawClientData) {
+function redirectToLogin() {
   window.location.href = "login.html";
 }
 
-let clientData;
+async function readJson(response) {
+  const data = await response.json().catch(() => null);
 
-try {
-  clientData = JSON.parse(rawClientData);
-} catch (e) {
-  sessionStorage.clear();
-  window.location.href = "login.html";
+  if (!response.ok || !data?.success) {
+    throw new Error(data?.message || "Server error");
+  }
+
+  return data;
 }
 
-if (!clientData?.api_key) {
-  sessionStorage.clear();
-  window.location.href = "login.html";
+async function postJson(path, payload) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  return readJson(response);
 }
 
-const apiKey = clientData.api_key;
+async function getJson(path) {
+  const response = await fetch(`${API_BASE_URL}${path}`);
+  return readJson(response);
+}
 
-// ── SUBSCRIPTION STATE ──────────────────
-
-let timeLeftMs = Infinity;
-
-// ── SUBSCRIPTION LOADER ─────────────────
-
-async function loadSubscriptionTime() {
+function getStoredClientData() {
   try {
-    const res = await fetch(
-      `https://website-server-9b3o.onrender.com/api/client/time?api_key=${apiKey}`
-    );
-
-    const data = await res.json();
-
-    if (!data.success) {
-      console.log("Subscription fetch failed");
-      return;
-    }
-
-    const days = data.subscription_time ?? 0;
-    const usedFreeTrial = data.used_free_trial ?? false;
-
-    sessionStorage.setItem("subscription_time", String(days));
-    sessionStorage.setItem("used_free_trial", String(usedFreeTrial));
-
-    updateTrialFromDB(days);
-
-    // TRUE STATE FLAG (fixed scope issue)
-    window.__SUB_ACTIVE__ = days > 0;
-
-  } catch (err) {
-    console.log("Subscription error:", err);
+    return JSON.parse(sessionStorage.getItem("client_data") || "null");
+  } catch {
+    sessionStorage.removeItem("client_data");
+    return null;
   }
 }
 
-// ── TRIAL UI ────────────────────────────
+function setClientData(data) {
+  clientData = data;
+  sessionStorage.setItem("client_data", JSON.stringify(data));
+}
 
-function updateTrialFromDB(daysRemaining) {
-  timeLeftMs = (daysRemaining ?? 0) * 24 * 60 * 60 * 1000;
+async function loadClientFromAuth() {
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-  updateSubscriptionBadge(daysRemaining);
+  if (sessionError || !session) {
+    redirectToLogin();
+    return false;
+  }
 
-  if (daysRemaining <= 0) {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !user?.email) {
+    await supabase.auth.signOut();
+    redirectToLogin();
+    return false;
+  }
+
+  const storedClient = getStoredClientData();
+
+  if (storedClient?.email === user.email && storedClient?.api_key) {
+    setClientData(storedClient);
+  }
+
+  const status = await postJson("/api/client/auth", { email: user.email });
+
+  if (!status.exists || !status.onboarded) {
+    window.location.href = "dashboard.html";
+    return false;
+  }
+
+  if (!status.client_data?.api_key) {
+    throw new Error("Server returned incomplete client data");
+  }
+
+  setClientData(status.client_data);
+  return true;
+}
+
+function buildScriptTag() {
+  const clientName = clientData?.client_name || "Client";
+
+  return `<!-- FunnelOS Chatbot -->
+<script src="https://chatbot-connect.vercel.app/chatbot.js" data-key="${clientData.api_key}" data-client_name="${clientName}"><\/script>`;
+}
+
+function renderClientHeader() {
+  const clientName = clientData?.client_name || "Client";
+  const website = clientData?.website || "Connected";
+
+  if (clientNameDisplay) clientNameDisplay.textContent = clientName;
+  if (websiteNameEl) websiteNameEl.textContent = website;
+  if (apiKeyCode) apiKeyCode.textContent = clientData?.api_key || "";
+  if (scriptCode) scriptCode.textContent = buildScriptTag();
+}
+
+function updateSubscriptionBadge(days) {
+  if (!subscriptionBadge) return;
+
+  subscriptionBadge.classList.toggle("paid", days > 14);
+  subscriptionBadge.textContent = days > 14 ? "Active Plan" : "Free Trial";
+}
+
+function updateTrialUi(days) {
+  subscriptionDays = Number(days || 0);
+  updateSubscriptionBadge(subscriptionDays);
+
+  if (!trialDaysEl || !trialFillEl) return;
+
+  if (subscriptionDays <= 0) {
     trialDaysEl.textContent = "Trial Expired";
     trialFillEl.style.width = "0%";
     return;
   }
 
-  trialDaysEl.textContent = `${daysRemaining} days remaining`;
-
-  const percentage = Math.max(0, (daysRemaining / 30) * 100);
-  trialFillEl.style.width = `${percentage}%`;
+  trialDaysEl.textContent = `${subscriptionDays} days remaining`;
+  trialFillEl.style.width = `${Math.min(100, (subscriptionDays / 30) * 100)}%`;
 }
 
-// ── FORMAT TIME ─────────────────────────
+async function loadSubscriptionTime() {
+  const data = await getJson(`/api/client/time?api_key=${encodeURIComponent(clientData.api_key)}`);
+  updateTrialUi(data.subscription_time ?? 0);
+}
 
 function formatTime(timestamp) {
   if (!timestamp) return "Just now";
 
-  const seconds = Math.floor((Date.now() - new Date(timestamp)) / 1000);
+  const created = new Date(timestamp);
+  if (Number.isNaN(created.getTime())) return "Just now";
 
+  const seconds = Math.max(0, Math.floor((Date.now() - created.getTime()) / 1000));
   if (seconds < 60) return `${seconds}s ago`;
+
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
+
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
 
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-// ── UPDATE LEAD STATUS ──────────────────
+function isToday(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return false;
 
-async function updateLeadStatus(leadId, attended) {
-  try {
-    const res = await fetch(
-      "https://website-server-9b3o.onrender.com/api/client/updateLeadStatus",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          api_key: apiKey,
-          lead_id: leadId,
-          attended: attended
-        })
-      }
-    );
-
-    const data = await res.json();
-
-    if (!data.success) {
-      console.log("Failed to update lead status:", data);
-    }
-  } catch (err) {
-    console.log("updateLeadStatus error:", err);
-  }
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear()
+    && date.getMonth() === now.getMonth()
+    && date.getDate() === now.getDate();
 }
 
-// ── CREATE LEAD CARD ────────────────────
+function formatMoney(value) {
+  if (value === null || value === undefined || value === "") return "N/A";
+  const number = Number(value);
+  if (Number.isNaN(number)) return String(value);
+  return `Rs ${number.toLocaleString("en-IN")}`;
+}
+
+function emptyLeadCard(title, subtitle) {
+  return `
+    <div class="lead-card">
+      <div class="lead-name">${title}</div>
+      <div class="lead-time">${subtitle}</div>
+    </div>
+  `;
+}
+
+function renderStats() {
+  const today = leads.filter(lead => isToday(lead.created_at)).length;
+  const attended = leads.filter(lead => lead.attended).length;
+
+  if (leadsTodayEl) leadsTodayEl.textContent = today;
+  if (totalLeadsEl) totalLeadsEl.textContent = leads.length;
+  if (attendedLeadsEl) attendedLeadsEl.textContent = attended;
+}
 
 function createLeadCard(lead) {
   const card = document.createElement("div");
   card.className = "lead-card";
+  card.dataset.leadId = lead.id;
+
+  const phone = lead.phone || lead.phoneno || "N/A";
 
   card.innerHTML = `
     <div class="lead-top">
       <div>
-        <div class="lead-name">
-          ${lead.intent || "New Lead"}
-        </div>
-
-        <div class="lead-time">
-          Lead arrived ${formatTime(lead.created_at)}
-        </div>
+        <div class="lead-name">${lead.intent || "New Lead"}</div>
+        <div class="lead-time">Lead arrived ${formatTime(lead.created_at)}</div>
       </div>
 
       <label class="attended-wrap">
@@ -161,143 +234,192 @@ function createLeadCard(lead) {
     </div>
 
     <div class="lead-details">
-      <div class="lead-item">📞 ${lead.phoneno || "N/A"}</div>
-      <div class="lead-item">💰 ${lead.budget || "N/A"}</div>
-      <div class="lead-item">📍 ${lead.location || "N/A"}</div>
-      <div class="lead-item">🏠 ${lead.bhk || "N/A"}</div>
-      <div class="lead-item">✨ ${lead.special_preferences || "None"}</div>
+      <div class="lead-item">Phone: ${phone}</div>
+      <div class="lead-item">Budget: ${formatMoney(lead.budget)}</div>
+      <div class="lead-item">Location: ${lead.location || "N/A"}</div>
+      <div class="lead-item">BHK: ${lead.bhk || "N/A"}</div>
+      <div class="lead-item">Preference: ${lead.special_preferences || "None"}</div>
     </div>
   `;
 
   const checkbox = card.querySelector(".attended-checkbox");
 
-  checkbox.addEventListener("change", () => {
-    updateLeadStatus(lead.id, checkbox.checked);
-    updateStats();
+  checkbox?.addEventListener("change", async () => {
+    const previousValue = Boolean(lead.attended);
+    lead.attended = checkbox.checked;
+    renderStats();
+
+    try {
+      await updateLeadStatus(lead.id, checkbox.checked);
+    } catch {
+      lead.attended = previousValue;
+      checkbox.checked = previousValue;
+      renderStats();
+    }
   });
 
-  // LOCK LOGIC (fixed)
-  if (timeLeftMs <= 0) {
+  if (subscriptionDays <= 0) {
     card.classList.add("lead-card--locked");
 
     const overlay = document.createElement("div");
     overlay.className = "lead-lock-overlay";
-    overlay.innerHTML = `<span>🔒 Lead access locked — upgrade to continue</span>`;
-
+    overlay.innerHTML = "<span>Lead access locked - upgrade to continue</span>";
     card.appendChild(overlay);
   }
 
-  leadsContainer.prepend(card);
+  return card;
 }
 
-// ── LOAD LEADS ──────────────────────────
+function renderLeads() {
+  if (!leadsContainer) return;
 
-let loading = false;
+  leadsContainer.innerHTML = "";
 
-async function loadLeads() {
-  if (loading) return;
-  loading = true;
-
-  try {
-    const res = await fetch(
-      "https://website-server-9b3o.onrender.com/api/client/leads",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: apiKey })
-      }
+  if (!leads.length) {
+    leadsContainer.innerHTML = emptyLeadCard(
+      "No leads yet",
+      "New chatbot leads will appear here automatically."
     );
-
-    const data = await res.json();
-
-    leadsContainer.innerHTML = "";
-
-    if (!data.success || !data.leads) {
-      leadsContainer.innerHTML = `
-        <div class="lead-card">
-          <div class="lead-name">Server Error</div>
-          <div class="lead-time">Could not load leads</div>
-        </div>
-      `;
-      return;
-    }
-
-    data.leads.reverse().forEach(createLeadCard);
-
-    leadsTodayEl.textContent = data.leads.length;
-    totalLeadsEl.textContent = data.leads.length;
-
-    updateStats();
-
-  } catch (err) {
-    console.log("FAILED TO LOAD LEADS", err);
-
-    leadsContainer.innerHTML = `
-      <div class="lead-card">
-        <div class="lead-name">Server Error</div>
-        <div class="lead-time">Could not load leads</div>
-      </div>
-    `;
-  } finally {
-    loading = false;
-  }
-}
-
-// ── STATS ───────────────────────────────
-
-function updateStats() {
-  const checked = document.querySelectorAll(".attended-checkbox:checked").length;
-  attendedLeadsEl.textContent = checked;
-}
-
-// ── UPGRADE BUTTON ──────────────────────
-
-upgradeBtn?.addEventListener("click", () => {
-  window.location.href = "payment.html";
-});
-
-// ── INIT ────────────────────────────────
-
-async function initDashboard() {
-  if (!apiKey) {
-    window.location.href = "login.html";
+    renderStats();
     return;
   }
 
-  await loadSubscriptionTime();
-  await loadLeads();
-  updateStats();
+  leads.forEach(lead => {
+    leadsContainer.appendChild(createLeadCard(lead));
+  });
+
+  renderStats();
 }
 
-document.addEventListener("DOMContentLoaded", initDashboard);
+async function loadLeads({ quiet = false } = {}) {
+  if (loadingLeads || !clientData?.api_key) return;
+  loadingLeads = true;
 
-// ── BADGE + NAME ────────────────────────
+  if (!quiet && leadsContainer && !leads.length) {
+    leadsContainer.innerHTML = emptyLeadCard("Loading leads", "Checking your latest chatbot captures...");
+  }
 
-const clientNameDisplay = document.getElementById("clientNameDisplay");
-const subscriptionBadge = document.getElementById("subscriptionBadge");
+  try {
+    const data = await postJson("/api/client/leads", {
+      api_key: clientData.api_key
+    });
 
-if (clientNameDisplay) {
-  clientNameDisplay.textContent =
-    clientData.client_name ||
-    sessionStorage.getItem("verbe_website") ||
-    "Client";
-}
-
-function updateSubscriptionBadge(days) {
-  if (!subscriptionBadge) return;
-
-  if (days > 14) {
-    subscriptionBadge.textContent = "Active Plan";
-    subscriptionBadge.classList.add("paid");
-  } else {
-    subscriptionBadge.textContent = "Free Trial";
-    subscriptionBadge.classList.remove("paid");
+    leads = Array.isArray(data.leads) ? data.leads : [];
+    renderLeads();
+  } catch {
+    if (leadsContainer && !quiet) {
+      leadsContainer.innerHTML = emptyLeadCard("Server Error", "Could not load leads.");
+    }
+  } finally {
+    loadingLeads = false;
   }
 }
 
-const websiteName = sessionStorage.getItem("verbe_website");
-
-if (websiteName) {
-  const el = document.getElementById("websiteName");
-  if (el) el.textContent = websiteName;
+async function updateLeadStatus(leadId, attended) {
+  await postJson("/api/client/updateLeadStatus", {
+    api_key: clientData.api_key,
+    lead_id: leadId,
+    attended
+  });
 }
+
+async function copyText(text, button) {
+  if (!text) return;
+
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+  } else {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+  }
+
+  if (button) {
+    const original = button.textContent;
+    button.textContent = "Copied";
+    button.classList.add("copied");
+    setTimeout(() => {
+      button.textContent = original;
+      button.classList.remove("copied");
+    }, 1500);
+  }
+}
+
+function showModal(view) {
+  if (!modalOverlay || !modalTitle) return;
+
+  apiKeyView?.classList.toggle("active", view === "apiKey");
+  scriptView?.classList.toggle("active", view === "script");
+  modalTitle.textContent = view === "apiKey" ? "API Key" : "Install Script";
+
+  if (apiKeyCode) apiKeyCode.textContent = clientData?.api_key || "";
+  if (scriptCode) scriptCode.textContent = buildScriptTag();
+
+  modalOverlay.classList.add("open");
+}
+
+function closeModal() {
+  modalOverlay?.classList.remove("open");
+}
+
+function wireActions() {
+  upgradeBtn?.addEventListener("click", () => {
+    window.location.href = "payment.html";
+  });
+
+  document.getElementById("viewScriptBtn")?.addEventListener("click", () => {
+    showModal("script");
+  });
+
+  document.getElementById("copyApiKeyBtn")?.addEventListener("click", async (event) => {
+    await copyText(clientData?.api_key || "", event.currentTarget);
+  });
+
+  document.getElementById("whatsappSetupBtn")?.addEventListener("click", (event) => {
+    event.currentTarget.textContent = "Coming Soon";
+  });
+
+  document.getElementById("apiKeyCopyBtn")?.addEventListener("click", async (event) => {
+    await copyText(clientData?.api_key || "", event.currentTarget);
+  });
+
+  document.getElementById("scriptCopyBtn")?.addEventListener("click", async (event) => {
+    await copyText(buildScriptTag(), event.currentTarget);
+  });
+
+  modalClose?.addEventListener("click", closeModal);
+  modalOverlay?.addEventListener("click", (event) => {
+    if (event.target === modalOverlay) closeModal();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeModal();
+  });
+}
+
+async function initDashboard() {
+  try {
+    const hasClient = await loadClientFromAuth();
+    if (!hasClient) return;
+
+    renderClientHeader();
+    wireActions();
+    await loadSubscriptionTime();
+    await loadLeads();
+
+    setInterval(() => {
+      loadLeads({ quiet: true });
+    }, 15000);
+  } catch {
+    if (leadsContainer) {
+      leadsContainer.innerHTML = emptyLeadCard("Dashboard Error", "Could not load your client dashboard.");
+    }
+  }
+}
+
+await initDashboard();

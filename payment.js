@@ -7,7 +7,23 @@ const RAZORPAY_KEY = "rzp_test_XXXXXXXXXXXXXXXX";
 // ── HELPERS ─────────────────────────────
 
 function getClientData() {
-  return JSON.parse(sessionStorage.getItem("client_data"));
+  try {
+    return JSON.parse(sessionStorage.getItem("client_data") || "null");
+  } catch {
+    sessionStorage.removeItem("client_data");
+    return null;
+  }
+}
+
+function requireClientData() {
+  const clientData = getClientData();
+
+  if (!clientData?.api_key) {
+    window.location.href = "login.html";
+    return null;
+  }
+
+  return clientData;
 }
 
 // ── CHECK FREE TRIAL STATUS ON LOAD ─────
@@ -93,7 +109,14 @@ trialBtn?.addEventListener("click", async () => {
 
 // ── PAY BUTTON ───────────────────────────
 
-payBtn.addEventListener("click", async () => {
+payBtn?.addEventListener("click", async () => {
+  if (!requireClientData()) return;
+
+  if (!window.Razorpay || RAZORPAY_KEY.includes("XXXXXXXX")) {
+    alert("Payment checkout is not configured yet.");
+    return;
+  }
+
   payBtn.disabled = true;
   payBtn.innerText = "Opening Razorpay...";
 
