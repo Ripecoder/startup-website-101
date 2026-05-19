@@ -6,28 +6,15 @@ const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ─────────────────────────────────────
-// GET CLIENT STATUS FROM BACKEND
+// BACKEND CHECK
 // ─────────────────────────────────────
-
-// ─────────────────────────────────────
-// GET CLIENT STATUS FROM BACKEND
-// ─────────────────────────────────────
-
 async function getClientStatus(email) {
-
     const response = await fetch(
         "https://website-server-9b3o.onrender.com/api/client/auth",
         {
-
             method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                email: email
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email })
         }
     );
 
@@ -35,46 +22,34 @@ async function getClientStatus(email) {
 }
 
 // ─────────────────────────────────────
-// CHECK AUTH + ROUTING
+// GOOGLE AUTH TRIGGER (NEW FIX)
 // ─────────────────────────────────────
+async function signInWithGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+            redirectTo: window.location.origin + "/login.html"
+        }
+    });
 
-async function checkAuth() {
-
-    // 1. GET SESSION (local)
-    const { data: sessionData } = await supabase.auth.getSession();
-    const session = sessionData?.session;
-
-    console.log("SESSION:", session);
-
-    if (!session) {
-        console.log("NO SESSION FOUND");
-        return;
+    if (error) {
+        console.log("Google Auth Error:", error.message);
     }
+}
 
-    // 2. FORCE REAL USER VALIDATION (IMPORTANT FIX)
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData?.user;
-
-    // if token is stale or user deleted → kill session
-    if (!user) {
-        console.log("INVALID SESSION → SIGNING OUT");
-        await supabase.auth.signOut();
-        return;
-    }
-
-    // 3. GET EMAIL FROM VERIFIED USER (NOT SESSION)
+// ─────────────────────────────────────
+// ROUTING AFTER AUTH
+// ─────────────────────────────────────
+async function handleRouting(user) {
     const email = user.email;
 
-    // 4. BACKEND CHECK
     const status = await getClientStatus(email);
 
-    // 5. STORE CLIENT DATA
     sessionStorage.setItem(
         "client_data",
-        JSON.stringify(status.client_data)
+        JSON.stringify(status.client_data || {})
     );
 
-    // 6. ROUTING LOGIC
     if (status.exists) {
         window.location.href = "client-dashboard.html";
     } else {
@@ -83,25 +58,58 @@ async function checkAuth() {
 }
 
 // ─────────────────────────────────────
-// EMAIL LOGIN
+// AUTH CHECK (CORE FIXED LOGIC)
 // ─────────────────────────────────────
-async function handleEmailLogin() {
-  const email = document.getElementById("emailInput")?.value?.trim();
-  const password = document.getElementById("passwordInput")?.value;
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
 
-  if (!email || !password) return;
+    if (!session) {
+        // NO SESSION → FORCE GOOGLE LOGIN
+        await signInWithGoogle();
+        return;
+    }
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+    const { data: { user } } = await supabase.auth.getUser();
 
-  if (error) {
-    console.log(error.message);
-  }
+    if (!user) {
+        await supabase.auth.signOut();
+        await signInWithGoogle();
+        return;
+    }
+
+    await handleRouting(user);
 }
 
+// ─────────────────────────────────────
+// EMAIL LOGIN (kept, but secondary)
+// ─────────────────────────────────────
+async function handleEmailLogin() {
+    const email = document.getElementById("emailInput")?.value?.trim();
+    const password = document.getElementById("passwordInput")?.value;
+
+    if (!email || !password) return;
+
+    const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    if (error) {
+        console.log(error.message);
+        return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await handleRouting(user);
+}
+
+// ─────────────────────────────────────
+// EVENTS
+// ─────────────────────────────────────
 document
-  .getElementById("emailLoginBtn")
-  ?.addEventListener("click", handleEmailLogin);
-checkAuth();
+    .getElementById("emailLoginBtn")
+    ?.addEventListener("click", handleEmailLogin);
+
+window.addEventListener("load", async () => {
+    await checkAuth();
+});
