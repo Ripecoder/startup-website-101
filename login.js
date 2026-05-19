@@ -6,7 +6,7 @@ const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ─────────────────────────────────────
-// BACKEND CHECK
+// BACKEND CHECK (NO DB SIDE EFFECTS EXPECTED)
 // ─────────────────────────────────────
 async function getClientStatus(email) {
     const response = await fetch(
@@ -22,7 +22,7 @@ async function getClientStatus(email) {
 }
 
 // ─────────────────────────────────────
-// GOOGLE AUTH TRIGGER (NEW FIX)
+// FORCE GOOGLE LOGIN (NO SILENT BYPASS)
 // ─────────────────────────────────────
 async function signInWithGoogle() {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -33,24 +33,22 @@ async function signInWithGoogle() {
     });
 
     if (error) {
-        console.log("Google Auth Error:", error.message);
+        console.log("Google login error:", error.message);
     }
 }
 
 // ─────────────────────────────────────
-// ROUTING AFTER AUTH
+// ROUTE USER AFTER DB CHECK
 // ─────────────────────────────────────
-async function handleRouting(user) {
-    const email = user.email;
-
-    const status = await getClientStatus(email);
+async function routeUser(user) {
+    const status = await getClientStatus(user.email);
 
     sessionStorage.setItem(
         "client_data",
         JSON.stringify(status.client_data || {})
     );
 
-    if (status.exists) {
+    if (status.exists === true) {
         window.location.href = "client-dashboard.html";
     } else {
         window.location.href = "dashboard.html";
@@ -58,17 +56,20 @@ async function handleRouting(user) {
 }
 
 // ─────────────────────────────────────
-// AUTH CHECK (CORE FIXED LOGIC)
+// AUTH FLOW (CLEAN STATE MACHINE)
 // ─────────────────────────────────────
 async function checkAuth() {
+
+    // STEP 1: FORCE FRESH SESSION CHECK
     const { data: { session } } = await supabase.auth.getSession();
 
+    // STEP 2: NO SESSION → ALWAYS FORCE GOOGLE LOGIN
     if (!session) {
-        // NO SESSION → FORCE GOOGLE LOGIN
         await signInWithGoogle();
         return;
     }
 
+    // STEP 3: VALIDATE USER (NOT JUST SESSION)
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -77,11 +78,12 @@ async function checkAuth() {
         return;
     }
 
-    await handleRouting(user);
+    // STEP 4: BUSINESS LOGIC ROUTING
+    await routeUser(user);
 }
 
 // ─────────────────────────────────────
-// EMAIL LOGIN (kept, but secondary)
+// EMAIL LOGIN (OPTIONAL SECONDARY PATH)
 // ─────────────────────────────────────
 async function handleEmailLogin() {
     const email = document.getElementById("emailInput")?.value?.trim();
@@ -95,12 +97,15 @@ async function handleEmailLogin() {
     });
 
     if (error) {
-        console.log(error.message);
+        console.log("Login error:", error.message);
         return;
     }
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) await handleRouting(user);
+
+    if (user) {
+        await routeUser(user);
+    }
 }
 
 // ─────────────────────────────────────
@@ -110,6 +115,9 @@ document
     .getElementById("emailLoginBtn")
     ?.addEventListener("click", handleEmailLogin);
 
+// ─────────────────────────────────────
+// ENTRY POINT
+// ─────────────────────────────────────
 window.addEventListener("load", async () => {
     await checkAuth();
 });
