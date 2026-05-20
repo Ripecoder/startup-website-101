@@ -1,5 +1,5 @@
 /* =========================================================
-   VERBE - dashboard.js
+   FunnelOS - dashboard.js
    This page is the client signup/onboarding flow.
    ========================================================= */
 
@@ -217,7 +217,7 @@ window.goToStep2 = async function() {
 
     if (result.client_data) storeClientData(result.client_data);
 
-    sessionStorage.setItem("verbe_website", websiteName);
+    sessionStorage.setItem("funnelos_website", websiteName);
 
     const scriptTag = buildScriptTag(clientData.api_key, websiteName);
     const scriptCode = document.getElementById("scriptCode");

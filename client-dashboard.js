@@ -1,9 +1,18 @@
 /* =========================================================
-   VERBE - client-dashboard.js
+   FunnelOS - client-dashboard.js
    Client dashboard view backed by the server as source of truth.
    ========================================================= */
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 const SUPABASE_URL = "https://wbwmffhegokbnfgtfufz.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indid21mZmhlZ29rYm5mZ3RmdWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMzYzNTcsImV4cCI6MjA5MzYxMjM1N30.7KNAJ_nZwqbdFMlRmEclGPoGx2ywTUmVwn3LxfdBF-w";
@@ -198,8 +207,8 @@ function formatMoney(value) {
 function emptyLeadCard(title, subtitle) {
   return `
     <div class="lead-card">
-      <div class="lead-name">${title}</div>
-      <div class="lead-time">${subtitle}</div>
+      <div class="lead-name">${escapeHtml(title)}</div>
+      <div class="lead-time">${escapeHtml(subtitle)}</div>
     </div>
   `;
 }
@@ -219,12 +228,19 @@ function createLeadCard(lead) {
   card.dataset.leadId = lead.id;
 
   const phone = lead.phone || lead.phoneno || "N/A";
+  const intent = escapeHtml(lead.intent || "New Lead");
+  const phoneSafe = escapeHtml(phone);
+  const budgetSafe = escapeHtml(formatMoney(lead.budget));
+  const locationSafe = escapeHtml(lead.location || "N/A");
+  const bhkSafe = escapeHtml(lead.bhk || "N/A");
+  const prefsSafe = escapeHtml(lead.special_preferences || "None");
+  const arrivedSafe = escapeHtml(formatTime(lead.created_at));
 
   card.innerHTML = `
     <div class="lead-top">
       <div>
-        <div class="lead-name">${lead.intent || "New Lead"}</div>
-        <div class="lead-time">Lead arrived ${formatTime(lead.created_at)}</div>
+        <div class="lead-name">${intent}</div>
+        <div class="lead-time">Lead arrived ${arrivedSafe}</div>
       </div>
 
       <label class="attended-wrap">
@@ -234,11 +250,11 @@ function createLeadCard(lead) {
     </div>
 
     <div class="lead-details">
-      <div class="lead-item">Phone: ${phone}</div>
-      <div class="lead-item">Budget: ${formatMoney(lead.budget)}</div>
-      <div class="lead-item">Location: ${lead.location || "N/A"}</div>
-      <div class="lead-item">BHK: ${lead.bhk || "N/A"}</div>
-      <div class="lead-item">Preference: ${lead.special_preferences || "None"}</div>
+      <div class="lead-item">Phone: ${phoneSafe}</div>
+      <div class="lead-item">Budget: ${budgetSafe}</div>
+      <div class="lead-item">Location: ${locationSafe}</div>
+      <div class="lead-item">BHK: ${bhkSafe}</div>
+      <div class="lead-item">Preference: ${prefsSafe}</div>
     </div>
   `;
 

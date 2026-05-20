@@ -1,10 +1,9 @@
-const payBtn   = document.getElementById("payBtn");
+const API_BASE_URL = "https://website-server-9b3o.onrender.com";
+
+const payBtn = document.getElementById("payBtn");
 const trialBtn = document.getElementById("trialBtn");
 const trialCard = document.getElementById("trialCard");
 let usedFreeTrial = false;
-const RAZORPAY_KEY = "rzp_test_XXXXXXXXXXXXXXXX";
-
-// ── HELPERS ─────────────────────────────
 
 function getClientData() {
   try {
@@ -26,16 +25,13 @@ function requireClientData() {
   return clientData;
 }
 
-// ── CHECK FREE TRIAL STATUS ON LOAD ─────
-// If client has already used their free trial, remove the trial card entirely
-
 async function checkTrialStatus() {
   const clientData = getClientData();
   if (!clientData) return;
 
   try {
     const res = await fetch(
-      `https://website-server-9b3o.onrender.com/api/client/trialStatus?api_key=${clientData.api_key}`
+      `${API_BASE_URL}/api/client/trialStatus?api_key=${encodeURIComponent(clientData.api_key)}`
     );
 
     const data = await res.json();
@@ -47,56 +43,81 @@ async function checkTrialStatus() {
         trialCard.remove();
       }
     }
-
   } catch (err) {
     console.log("Trial status check error:", err);
   }
 }
 
-// ── STORE SUBSCRIPTION TIME ──────────────
-// When days = 14, backend also sets used_free_trial = true automatically
-
-async function storeSubscriptionTime(days) {
+async function activateFreeTrial() {
   const clientData = getClientData();
 
   if (!clientData) {
-    console.log("No client data found");
     return false;
   }
 
-  const response = await fetch(
-    "https://website-server-9b3o.onrender.com/api/client/time/set",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        api_key: clientData.api_key,
-        subscription_time: days
-      })
-    }
-  );
+  const response = await fetch(`${API_BASE_URL}/api/client/time/set`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: clientData.api_key,
+      subscription_time: 14
+    })
+  });
 
   const data = await response.json();
 
   if (!data.success) {
-    console.log("FAILED TO STORE TIME");
     return false;
   }
 
   sessionStorage.setItem("subscription_time", data.subscription_time);
-  if (days === 14) {
-    sessionStorage.setItem("used_free_trial","true")
-  }
+  sessionStorage.setItem("used_free_trial", "true");
   return true;
 }
 
-// ── TRIAL BUTTON ─────────────────────────
+async function createPaymentOrder(apiKey) {
+  const response = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ api_key: apiKey })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.success) {
+    throw new Error(data?.message || "Could not start checkout");
+  }
+
+  return data;
+}
+
+async function verifyPaymentOnServer(apiKey, paymentResponse) {
+  const response = await fetch(`${API_BASE_URL}/api/payment/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: apiKey,
+      razorpay_order_id: paymentResponse.razorpay_order_id,
+      razorpay_payment_id: paymentResponse.razorpay_payment_id,
+      razorpay_signature: paymentResponse.razorpay_signature
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.success) {
+    throw new Error(data?.message || "Payment verification failed");
+  }
+
+  sessionStorage.setItem("subscription_time", data.subscription_time);
+  return true;
+}
 
 trialBtn?.addEventListener("click", async () => {
   trialBtn.disabled = true;
   trialBtn.innerText = "Activating...";
 
-  const ok = await storeSubscriptionTime(14);
+  const ok = await activateFreeTrial();
 
   if (!ok) {
     trialBtn.disabled = false;
@@ -107,64 +128,59 @@ trialBtn?.addEventListener("click", async () => {
   window.location.href = "client-dashboard.html";
 });
 
-// ── PAY BUTTON ───────────────────────────
-
 payBtn?.addEventListener("click", async () => {
-  if (!requireClientData()) return;
+  const clientData = requireClientData();
+  if (!clientData) return;
 
-  if (!window.Razorpay || RAZORPAY_KEY.includes("XXXXXXXX")) {
-    alert("Payment checkout is not configured yet.");
+  if (!window.Razorpay) {
+    alert("Payment checkout could not load. Refresh and try again.");
     return;
   }
 
   payBtn.disabled = true;
   payBtn.innerText = "Opening Razorpay...";
 
-  const options = {
-    key: RAZORPAY_KEY,
-    amount: 499900,
-    currency: "INR",
-    name: "FunnelOS",
-    description: "Monthly Subscription",
+  try {
+    const order = await createPaymentOrder(clientData.api_key);
 
-    handler: async function (response) {
-      try {
-        console.log("PAYMENT SUCCESS:", response);
+    const options = {
+      key: order.key_id,
+      amount: order.amount,
+      currency: order.currency,
+      name: "FunnelOS",
+      description: "Monthly Subscription",
+      order_id: order.order_id,
 
-        const ok = await storeSubscriptionTime(30);
-
-        if (!ok) {
-          alert("Failed to activate subscription");
+      handler: async function (response) {
+        try {
+          await verifyPaymentOnServer(clientData.api_key, response);
+          window.location.href = "client-dashboard.html";
+        } catch (err) {
+          alert(err.message || "Payment verification failed");
           payBtn.disabled = false;
           payBtn.innerText = "Upgrade Now";
-          return;
         }
+      },
 
-        window.location.href = "client-dashboard.html";
-
-      } catch (e) {
-        console.log("Razorpay handler error:", e);
-        payBtn.disabled = false;
-        payBtn.innerText = "Upgrade Now";
+      theme: {
+        color: "#1a73e8"
       }
-    },
+    };
 
-    theme: {
-      color: "#1a73e8"
-    }
-  };
+    const rzp = new Razorpay(options);
 
-  const rzp = new Razorpay(options);
+    rzp.on("payment.failed", function () {
+      alert("Payment failed.");
+      payBtn.disabled = false;
+      payBtn.innerText = "Upgrade Now";
+    });
 
-  rzp.on("payment.failed", function () {
-    alert("Payment failed.");
+    rzp.open();
+  } catch (err) {
+    alert(err.message || "Payment checkout is not configured yet.");
     payBtn.disabled = false;
     payBtn.innerText = "Upgrade Now";
-  });
-
-  rzp.open();
+  }
 });
-
-// ── INIT ─────────────────────────────────
 
 checkTrialStatus();

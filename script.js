@@ -1,6 +1,15 @@
 /* =========================================================
-   VERBE — script.js (REAL BACKEND VERSION)
+   FunnelOS — script.js (landing + demo chat)
    ========================================================= */
+
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 /* ── Sticky Header ───────────────────────────────────────── */
 const header = document.getElementById('header');
@@ -100,7 +109,7 @@ function addMessage(text, isUser = false) {
   const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
 
   msg.innerHTML = `
-    <div class="msg-bubble">${text}</div>
+    <div class="msg-bubble">${escapeHtml(text)}</div>
     <div class="msg-time">${time}</div>
   `;
 
