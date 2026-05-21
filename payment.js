@@ -147,7 +147,7 @@ payBtn?.addEventListener("click", async () => {
       key: order.key_id,
       amount: order.amount,
       currency: order.currency,
-      name: "FunnelOS",
+      name: "Nexulith",
       description: "Monthly Subscription",
       order_id: order.order_id,
 

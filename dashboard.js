@@ -1,5 +1,5 @@
 /* =========================================================
-   FunnelOS - dashboard.js
+   Nexulith - dashboard.js
    This page is the client signup/onboarding flow.
    ========================================================= */
 
@@ -158,7 +158,7 @@ function isValidEmail(email) {
 }
 
 function buildScriptTag(apiKey, clientName) {
-  return `<!-- FunnelOS Chatbot -->
+  return `<!-- Nexulith Chatbot -->
 <script src="https://chatbot-connect.vercel.app/chatbot.js" data-key="${apiKey}" data-client_name="${clientName}"><\/script>`;
 }
 
@@ -217,7 +217,7 @@ window.goToStep2 = async function() {
 
     if (result.client_data) storeClientData(result.client_data);
 
-    sessionStorage.setItem("funnelos_website", websiteName);
+    sessionStorage.setItem("Nexulith_website", websiteName);
 
     const scriptTag = buildScriptTag(clientData.api_key, websiteName);
     const scriptCode = document.getElementById("scriptCode");

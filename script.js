@@ -1,5 +1,5 @@
 /* =========================================================
-   FunnelOS — script.js (landing + demo chat)
+   Nexulith — script.js (landing + demo chat)
    ========================================================= */
 
 function escapeHtml(text) {

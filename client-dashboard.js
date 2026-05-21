@@ -1,5 +1,5 @@
 /* =========================================================
-   FunnelOS - client-dashboard.js
+   Nexulith - client-dashboard.js
    Client dashboard view backed by the server as source of truth.
    ========================================================= */
 
@@ -127,7 +127,7 @@ async function loadClientFromAuth() {
 function buildScriptTag() {
   const clientName = clientData?.client_name || "Client";
 
-  return `<!-- FunnelOS Chatbot -->
+  return `<!-- Nexulith Chatbot -->
 <script src="https://chatbot-connect.vercel.app/chatbot.js" data-key="${clientData.api_key}" data-client_name="${clientName}"><\/script>`;
 }
 
