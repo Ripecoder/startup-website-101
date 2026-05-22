@@ -14,7 +14,7 @@ const togglePasswordBtn = document.getElementById("togglePassword");
 
 function showError(message) {
     if (!errorMsg) return;
-    errorMsg.textContext = message;
+    errorMsg.textContent = message;  // ✅ fixed typo
     errorMsg.classList.toggle("visible", Boolean(message));
 }
 
@@ -52,7 +52,7 @@ async function signInWithGoogle() {
     const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-            redirectTo: `${window.location.origin}/login.html`
+            redirectTo: "https://nexulith.vercel.app/login.html"  // ✅ hardcoded, no ambiguity
         }
     });
 
@@ -72,7 +72,13 @@ async function routeUser(user) {
         throw new Error("Missing authenticated user email");
     }
 
-    const status = await getClientStatus(user.email);
+    let status;
+    try {
+        status = await getClientStatus(user.email);
+    } catch (err) {
+        throw new Error("Server is waking up, please wait 30 seconds and try again.");
+    }
+
     const clientData = status.client_data;
     const dashboardUrl = getDashboardUrl(status);
 
@@ -139,7 +145,6 @@ googleLoginBtn?.addEventListener("click", signInWithGoogle);
 emailLoginBtn?.addEventListener("click", handleEmailLogin);
 togglePasswordBtn?.addEventListener("click", () => {
     if (!passwordInput) return;
-
     passwordInput.type = passwordInput.type === "password" ? "text" : "password";
 });
 
