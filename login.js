@@ -61,6 +61,10 @@ function storeClientSession(clientData) {
     sessionStorage.setItem("client_data", JSON.stringify(clientData));
 }
 
+function getDashboardUrl(status) {
+    return status.onboarded ? "client-dashboard.html" : "dashboard.html";
+}
+
 async function routeUser(user) {
     if (!user?.email) {
         throw new Error("Missing authenticated user email");
@@ -68,16 +72,17 @@ async function routeUser(user) {
 
     const status = await getClientStatus(user.email);
     const clientData = status.client_data;
+    const dashboardUrl = getDashboardUrl(status);
 
-    if (!clientData?.email || !clientData?.api_key) {
+    if (clientData?.email) {
+        storeClientSession(clientData);
+    }
+
+    if (status.onboarded && !clientData?.api_key) {
         throw new Error("Server returned incomplete client data");
     }
 
-    storeClientSession(clientData);
-
-    window.location.href = status.onboarded
-        ? "client-dashboard.html"
-        : "dashboard.html";
+    window.location.href = dashboardUrl;
 }
 
 async function routeExistingSession() {
