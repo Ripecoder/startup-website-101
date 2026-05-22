@@ -13,10 +13,10 @@
   --bg-1:        #0d1220;
   --bg-card:     #141c2e;
   --bg-input:    #0f1623;
-  --border:      rgba(255,255,255,0.07);
+  --border:      rgba(255,255,255,0.16);
   --text:        #e8edf5;
-  --text-muted:  #7a8ba3;
-  --text-dim:    #4a5a72;
+  --text-muted:  #a8b7cc;
+  --text-dim:    #8da0b8;
   --white:       #ffffff;
   --green:       #22c55e;
   --red:         #f87171;
@@ -38,6 +38,13 @@ body {
   padding: 2rem 1rem;
   position: relative;
   overflow-x: hidden;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.9);
+  outline-offset: 3px;
 }
 
 /* ── Background ──────────────────────────────────────────── */
@@ -155,7 +162,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.08);
   border: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font-body);
@@ -168,8 +175,8 @@ body {
   margin-bottom: 1.5rem;
 }
 .btn-google:hover {
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.28);
   transform: translateY(-1px);
 }
 .btn-google:active { transform: translateY(0); }

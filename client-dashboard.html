@@ -45,7 +45,7 @@
         Live
       </div>
 
-      <button class="upgrade-btn" id="upgradeBtn">
+      <button class="upgrade-btn" id="upgradeBtn" aria-label="Upgrade Nexulith plan">
         Upgrade Plan
       </button>
 
@@ -162,15 +162,15 @@
 
           <h3>Quick Actions</h3>
 
-          <button class="action-btn" id="viewScriptBtn">
+          <button class="action-btn" id="viewScriptBtn" aria-label="View chatbot install script">
             View Script
           </button>
 
-          <button class="action-btn" id="copyApiKeyBtn">
+          <button class="action-btn" id="copyApiKeyBtn" aria-label="Copy your API key">
             Copy API Key
           </button>
 
-          <button class="action-btn" id="whatsappSetupBtn">
+          <button class="action-btn" id="whatsappSetupBtn" aria-label="Open WhatsApp setup when available">
             WhatsApp Setup (Coming Soon)
           </button>
 
@@ -209,7 +209,7 @@
 
       <div class="modal-header">
         <h3 id="modalTitle">Modal</h3>
-        <button class="modal-close" id="modalClose">✕</button>
+        <button class="modal-close" id="modalClose" aria-label="Close dialog" title="Close dialog">✕</button>
       </div>
 
       <div class="modal-body">
@@ -219,7 +219,7 @@
           <p class="modal-desc">Your unique API key. Keep this private — it authenticates your chatbot.</p>
           <div class="snippet-box" id="apiKeySnippet">
             <code id="apiKeyCode">loading...</code>
-            <button class="snippet-copy-btn" id="apiKeyCopyBtn">Copy</button>
+            <button class="snippet-copy-btn" id="apiKeyCopyBtn" aria-label="Copy API key">Copy</button>
           </div>
         </div>
 
@@ -228,7 +228,7 @@
           <p class="modal-desc">Paste this snippet inside the <code>&lt;body&gt;</code> tag of your website.</p>
           <div class="snippet-box snippet-box--tall">
             <pre id="scriptCode">loading...</pre>
-            <button class="snippet-copy-btn snippet-copy-btn--top" id="scriptCopyBtn">Copy</button>
+            <button class="snippet-copy-btn snippet-copy-btn--top" id="scriptCopyBtn" aria-label="Copy chatbot install script">Copy</button>
           </div>
         </div>
 

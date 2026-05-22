@@ -13,10 +13,10 @@
   --bg-1:        #0d1220;
   --bg-card:     #141c2e;
   --bg-input:    #0f1623;
-  --border:      rgba(255,255,255,0.07);
+  --border:      rgba(255,255,255,0.16);
   --text:        #e8edf5;
-  --text-muted:  #7a8ba3;
-  --text-dim:    #4a5a72;
+  --text-muted:  #a8b7cc;
+  --text-dim:    #8da0b8;
   --white:       #ffffff;
   --green:       #22c55e;
   --red:         #f87171;
@@ -34,6 +34,14 @@ body {
   color: var(--text);
   font-family: var(--font-body);
   min-height: 100vh;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.9);
+  outline-offset: 3px;
 }
 
 /* ── Header ──────────────────────────────────────────────── */
@@ -101,9 +109,9 @@ body {
 }
 
 .btn-logout {
-  background: none;
+  background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
-  color: var(--text-dim);
+  color: var(--text-muted);
   font-family: var(--font-body);
   font-size: 0.8rem;
   padding: 0.35rem 0.85rem;
@@ -404,8 +412,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  color: var(--text-muted);
+  background: rgba(255,255,255,0.06);
+  color: var(--white);
   font-family: var(--font-body);
   font-size: 0.9rem;
   padding: 0.85rem 1.5rem;
@@ -458,7 +466,7 @@ body {
   gap: 0.35rem;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  color: var(--text-muted);
+  color: var(--white);
   padding: 0.28rem 0.7rem;
   border-radius: 6px;
   font-size: 0.75rem;
@@ -544,9 +552,9 @@ body {
 }
 
 .icon-btn {
-  background: none;
+  background: rgba(255,255,255,0.05);
   border: 1px solid var(--border);
-  color: var(--text-dim);
+  color: var(--text);
   width: 32px; height: 32px;
   border-radius: 7px;
   cursor: pointer;

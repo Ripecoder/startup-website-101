@@ -22,7 +22,7 @@
           <div class="user-avatar" id="userAvatar">?</div>
           <span class="user-email" id="userEmail">Loading...</span>
         </div>
-        <button class="btn-logout" id="logoutBtn">Sign out</button>
+        <button class="btn-logout" id="logoutBtn" aria-label="Sign out of Nexulith">Sign out</button>
       </div>
     </div>
   </header>
@@ -152,7 +152,7 @@
 
             <div class="form-error" id="formError"></div>
 
-            <button class="btn-primary btn-full" id="nextBtn" onclick="goToStep2()">
+            <button class="btn-primary btn-full" id="nextBtn" onclick="goToStep2()" aria-label="Continue to get your chatbot script">
               Continue → Get your script
             </button>
           </div>
@@ -172,7 +172,7 @@
                   <span class="dot green"></span>
                 </div>
                 <span class="snippet-filename">Paste above &lt;/body&gt;</span>
-                <button class="copy-btn" id="copyScriptBtn" onclick="copyScript()">
+                <button class="copy-btn" id="copyScriptBtn" onclick="copyScript()" aria-label="Copy chatbot install script">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   <span id="copyScriptText">Copy</span>
                 </button>
@@ -189,8 +189,8 @@
             </div>
 
             <div class="step2-actions">
-              <button class="btn-ghost" onclick="goToStep1()">← Back</button>
-              <button class="btn-primary" onclick="goToStep3()">Proceed to payment →</button>
+              <button class="btn-ghost" onclick="goToStep1()" aria-label="Go back to your details">← Back</button>
+              <button class="btn-primary" onclick="goToStep3()" aria-label="Proceed to payment">Proceed to payment →</button>
             </div>
           </div>
         </div>
@@ -220,10 +220,10 @@
             <div class="apikey-box">
               <span class="apikey-text" id="apikeyDisplay">vrb_live_••••••••••••••••</span>
               <div class="apikey-actions">
-                <button class="icon-btn" id="toggleKeyBtn" onclick="toggleKeyVisibility()" title="Show/hide key">
+                <button class="icon-btn" id="toggleKeyBtn" onclick="toggleKeyVisibility()" title="Show or hide API key" aria-label="Show or hide API key">
                   <svg id="keyEyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
-                <button class="icon-btn" onclick="copyApiKey()" title="Copy key">
+                <button class="icon-btn" onclick="copyApiKey()" title="Copy API key" aria-label="Copy API key">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 </button>
               </div>
@@ -249,7 +249,7 @@
             <div class="empty-icon">📭</div>
             <div class="empty-title">No leads yet</div>
             <p class="empty-desc">Deploy your chatbot first. Leads will appear here in real time once visitors start chatting.</p>
-            <button class="btn-primary" onclick="switchSection('deploy')">Deploy now →</button>
+            <button class="btn-primary" onclick="switchSection('deploy')" aria-label="Go to deploy setup">Deploy now →</button>
           </div>
         </div>
       </section>

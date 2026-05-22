@@ -109,7 +109,19 @@ async function loadClientFromAuth() {
     setClientData(storedClient);
   }
 
-  const status = await postJson("/api/client/auth", { email: user.email });
+  let status;
+  try {
+    status = await postJson("/api/client/auth", { email: user.email });
+  } catch {
+    if (leadsContainer) {
+      leadsContainer.innerHTML = emptyLeadCard(
+        "Server waking up...",
+        "This usually takes 30 seconds. Retrying automatically..."
+      );
+    }
+    setTimeout(() => window.location.reload(), 12000);
+    return false;
+  }
 
   if (!status.exists || !status.onboarded) {
     window.location.href = "dashboard.html";
@@ -117,7 +129,14 @@ async function loadClientFromAuth() {
   }
 
   if (!status.client_data?.api_key) {
-    throw new Error("Server returned incomplete client data");
+    if (leadsContainer) {
+      leadsContainer.innerHTML = emptyLeadCard(
+        "Session Error",
+        "Could not load your account. Please log in again."
+      );
+    }
+    setTimeout(() => redirectToLogin(), 3000);
+    return false;
   }
 
   setClientData(status.client_data);

@@ -13,7 +13,9 @@ const passwordInput = document.getElementById("passwordInput");
 const togglePasswordBtn = document.getElementById("togglePassword");
 
 function showError(message) {
-    if (errorMsg) errorMsg.textContent = message;
+    if (!errorMsg) return;
+    errorMsg.textContext = message;
+    errorMsg.classList.toggle("visible", Boolean(message));
 }
 
 function setEmailLoading(isLoading) {

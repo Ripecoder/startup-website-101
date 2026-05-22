@@ -3,8 +3,8 @@
   --bg: #080c14;
   --bg-card: #141c2e;
   --text: #e8edf5;
-  --text-muted: #7a8ba3;
-  --border: rgba(255,255,255,0.08);
+  --text-muted: #a8b7cc;
+  --border: rgba(255,255,255,0.16);
   --radius: 18px;
   --green: #22c55e;
 }
@@ -18,6 +18,12 @@ body {
   font-family: "DM Sans", sans-serif;
   background: var(--bg);
   color: var(--text);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.9);
+  outline-offset: 3px;
 }
 
 .container {
@@ -160,13 +166,13 @@ body {
 }
 
 .btn-secondary {
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.09);
   color: white;
   border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.14);
 }
 
 .note {
