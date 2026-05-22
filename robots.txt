@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /login.html
+Disallow: /dashboard.html
+Disallow: /client-dashboard.html
+Disallow: /payment.html
+Disallow: /testing/
+
+Sitemap: https://nexulith.vercel.app/sitemap.xml
