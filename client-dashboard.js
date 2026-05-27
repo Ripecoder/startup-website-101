@@ -184,8 +184,25 @@ function updateTrialUi(days) {
 }
 
 async function loadSubscriptionTime() {
-  const data = await getJson(`/api/client/time?api_key=${encodeURIComponent(clientData.api_key)}`);
-  updateTrialUi(data.subscription_time ?? 0);
+
+  try {
+
+    const result = await postJson(
+      "/api/client/subscription-status",
+      {
+        api_key: clientData.api_key
+      }
+    );
+
+    updateTrialUi(result.days_remaining);
+
+  } catch (error) {
+
+    console.error("Subscription load failed:", error);
+
+    updateTrialUi(0);
+
+  }
 }
 
 function formatTime(timestamp) {
@@ -327,35 +344,83 @@ function renderLeads() {
 }
 
 async function loadLeads({ quiet = false } = {}) {
+
   if (loadingLeads || !clientData?.api_key) return;
+
   loadingLeads = true;
 
-  if (!quiet && leadsContainer && !leads.length) {
-    leadsContainer.innerHTML = emptyLeadCard("Loading leads", "Checking your latest chatbot captures...");
-  }
-
   try {
-    const data = await postJson("/api/client/leads", {
-      api_key: clientData.api_key
-    });
 
-    leads = Array.isArray(data.leads) ? data.leads : [];
-    renderLeads();
-  } catch {
-    if (leadsContainer && !quiet) {
-      leadsContainer.innerHTML = emptyLeadCard("Server Error", "Could not load leads.");
+    const result = await postJson(
+      "/api/client/leads",
+      {
+        api_key: clientData.api_key
+      }
+    );
+
+    const incomingLeads = result.leads || [];
+
+    // EXISTING IDS ALREADY ON DASHBOARD
+    const existingIds = new Set(
+      leads.map(lead => lead.id)
+    );
+
+    // ONLY NEW LEADS
+    const newLeads = incomingLeads.filter(
+      lead => !existingIds.has(lead.id)
+    );
+
+    if (newLeads.length > 0) {
+
+      leads = [...newLeads, ...leads];
+
+      // APPEND ONLY NEW CARDS
+      newLeads.reverse().forEach(lead => {
+
+        const card = createLeadCard(lead);
+
+        if (leadsContainer.firstChild) {
+          leadsContainer.prepend(card);
+        } else {
+          leadsContainer.appendChild(card);
+        }
+
+      });
+
+      renderStats();
     }
+
+  } catch (error) {
+
+    console.error("Lead sync failed:", error);
+
   } finally {
+
     loadingLeads = false;
+
   }
 }
 
 async function updateLeadStatus(leadId, attended) {
-  await postJson("/api/client/updateLeadStatus", {
-    api_key: clientData.api_key,
-    lead_id: leadId,
-    attended
-  });
+
+  await postJson(
+    "/api/client/update-lead-status",
+    {
+      lead_id: leadId,
+      attended,
+      api_key: clientData.api_key
+    }
+  );
+
+  const leadIndex = leads.findIndex(
+    lead => lead.id === leadId
+  );
+
+  if (leadIndex !== -1) {
+    leads[leadIndex].attended = attended;
+  }
+
+  renderStats();
 }
 
 async function copyText(text, button) {
