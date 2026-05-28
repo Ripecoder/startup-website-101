@@ -271,7 +271,7 @@ function createLeadCard(lead) {
   const bhkSafe = escapeHtml(lead.bhk || "N/A");
   const prefsSafe = escapeHtml(lead.special_preferences || "None");
   const dateObj = new Date(lead.created_at);
-  dateObj.setMinutes(dateObj.getMinutes() - 330); // Subtracts 5 hours and 30 minutes
+  dateObj.setMinutes(dateObj.getMinutes() + 330); // Subtracts 5 hours and 30 minutes
   const arrivedSafe = escapeHtml(formatTime(dateObj));
   
   card.innerHTML = `
