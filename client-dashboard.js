@@ -270,14 +270,17 @@ function createLeadCard(lead) {
   const locationSafe = escapeHtml(lead.location || "N/A");
   const bhkSafe = escapeHtml(lead.bhk || "N/A");
   const prefsSafe = escapeHtml(lead.special_preferences || "None");
-  const arrivedSafe = escapeHtml(formatTime(lead.created_at));
-
+  const dateObj = new Date(lead.created_at);
+  dateObj.setMinutes(dateObj.getMinutes() - 330); // Subtracts 5 hours and 30 minutes
+  const arrivedSafe = escapeHtml(formatTime(dateObj));
+  
   card.innerHTML = `
     <div class="lead-top">
       <div>
         <div class="lead-name">${intent}</div>
         <div class="lead-time">Lead arrived ${arrivedSafe}</div>
       </div>
+
 
       <label class="attended-wrap">
         <input type="checkbox" class="attended-checkbox" ${lead.attended ? "checked" : ""}>
