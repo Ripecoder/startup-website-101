@@ -1,5 +1,7 @@
 const API_BASE_URL = "https://website-server-9b3o.onrender.com";
 
+let clientData = JSON.parse(sessionStorage.getItem("client_data"));
+
 const payBtn = document.getElementById("payBtn");
 const trialBtn = document.getElementById("trialBtn");
 const trialCard = document.getElementById("trialCard");
