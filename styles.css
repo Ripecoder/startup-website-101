@@ -310,6 +310,18 @@ select:focus-visible {
   animation: fadeSlideDown 0.6s 0.2s ease both;
 }
 
+.dashboard-btn-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  animation: fadeSlideDown 0.6s 0.25s ease both;
+}
+
+.dashboard-btn {
+  min-width: 240px;
+  justify-content: center;
+}
+
 .hero-actions {
   display: flex;
   align-items: center;
