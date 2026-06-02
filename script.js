@@ -142,7 +142,7 @@ async function sendChatMessage() {
       },
       body: JSON.stringify({
         messages: messages,
-        api_key: "acjczgdvdfxcg",
+        api_key: "vrb_live_n21816012_gmail.com_1780381110",
         session_id: SESSION_ID,
         client_email: clientEmail   // ✅ NEW FIELD ADDED
       })
