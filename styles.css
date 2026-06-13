@@ -1986,10 +1986,7 @@ select:focus-visible {
 .pain-section h2 {
   text-align: center;
   max-width: 800px;
-  margin: 0 auto 48px;
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1.2;
-  font-weight: 800;
+  margin: 0 auto 60px;
 }
 
 .pain-grid {
@@ -1999,25 +1996,41 @@ select:focus-visible {
 }
 
 .pain-card {
-  padding: 28px;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 20px;
+  position: relative;
+  padding: 32px;
+  min-height: 180px;
+
   background: rgba(255,255,255,0.03);
-  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
 
-  font-size: 1.05rem;
-  line-height: 1.6;
-  font-weight: 500;
-
-  transition: transform .25s ease,
-              border-color .25s ease,
-              background .25s ease;
+  overflow: hidden;
 }
 
-.pain-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.05);
+.pain-number {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1;
+
+  opacity: 0.08;
+
+  /* use your site's accent gradient color */
+  color: var(--primary);
+}
+
+.pain-card p {
+  position: relative;
+  z-index: 2;
+
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 0;
+
+  max-width: 260px;
 }
 
 @media (max-width: 900px) {
