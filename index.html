@@ -69,8 +69,7 @@
       <a href="#" class="logo">Nexulith<span class="logo-dot">.</span></a>
       <nav class="nav" id="nav">
         <a href="#how-it-works">How it works</a>
-        <a href="#proof">Results</a>
-        <a href="login.html">Pricing</a>
+        <a href="pricing.html">Pricing</a>
         <a href="login.html">Install</a>
       </nav>
       <a href="login.html" class="btn btn-primary btn-sm header-cta" aria-label="Start your free Nexulith trial">Start Free Trial</a>
@@ -88,14 +87,15 @@
     <div class="container hero-content">
       <div class="hero-badge">
         <span class="badge-dot"></span>
-        Live on 12+ builder sites this month
+        14 days free trial. setup included
       </div>
       <h1 class="hero-headline">
-        Get <span class="highlight">3–5 qualified</span><br />property buyers<br />in 14 days.
+        Turn Website Visitors Into <span class="highlight">Qualified Property Leads</span><br />automatically.
       </h1>
       <p class="hero-sub">
-        We capture, qualify, and send ready-to-visit leads<br class="hide-mobile" />
-        directly to you — fully automated.
+        Most website visitors leave without calling.
+        Nexulith qualifies buyers, captures phone numbers,
+        and sends hot leads directly to your sales team.
       </p>
       <div class="dashboard-btn-wrap">
         <a href="login.html" class="btn btn-outline btn-lg dashboard-btn">
@@ -103,7 +103,7 @@
         </a>
       </div>
       <div class="hero-actions">
-        <a href="#pricing" class="btn btn-primary btn-lg" aria-label="View Nexulith pricing and start a free trial">Start Free Trial</a>
+        <a href="pricing.html" class="btn btn-primary btn-lg" aria-label="View Nexulith pricing and start a free trial">Start Free Trial</a>
         <a href="#demo" class="btn btn-ghost btn-lg" aria-label="Try the Nexulith chatbot demo">
           <span class="play-icon">▶</span> Try Demo
         </a>
@@ -185,63 +185,198 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             </div>
             <div class="step-label">Site Visit</div>
-            <p class="step-desc">Books visit automatically</p>
+            <p class="step-desc">Lead is ready for follow-up</p>
           </div>
 
         </div>
       </div>
     </div>
   </section>
+  <section class="pain-section">
+  <div class="container">
 
-  <!-- LIVE DEMO -->
-  <section class="section demo-section" id="demo">
+    <h2>You are already paying for traffic, don't lose the leads.</h2>
+
+    <div class="pain-grid">
+
+      <div class="pain-card">
+        Visitor leaves without sharing contact detail.
+      </div>
+
+      <div class="pain-card">
+        lead forms convert poorly on mobile
+      </div>
+
+      <div class="pain-card">
+        Sales teams spend time chasing unqualified prospects
+      </div>
+
+    </div>
+
+  </div>
+</section>
+  <!-- DEMO + DASHBOARD PREVIEW (unified) -->
+  <section class="section unified-demo-section" id="demo">
     <div class="demo-bg-glow"></div>
-    <div class="container demo-inner">
-      <div class="demo-text">
-        <div class="section-label">Live demo</div>
-        <h2 class="section-title">See it in action.</h2>
-        <p class="section-sub">
-          This is the exact chatbot your visitors will see — asking the right questions, capturing the right data.
-        </p>
-        <ul class="demo-bullets">
-          <li><span class="check">✓</span> Asks budget, location, BHK preferences</li>
-          <li><span class="check">✓</span> Captures phone number naturally</li>
-          <li><span class="check">✓</span> Qualifies the buyer silently</li>
-          <li><span class="check">✓</span> Books site visit on the spot</li>
-        </ul>
-        <a href="login.html" class="btn btn-primary" aria-label="Install Nexulith chatbot on your site">Get this on your site →</a>
-      </div>
-      <div class="demo-widget-wrap">
-        <div class="chatbot-container" id="chatbotContainer">
-          <div class="chatbot-header">
-            <div class="chatbot-avatar">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
-            </div>
-            <div>
-              <div class="chatbot-name">Nexulith AI</div>
-              <div class="chatbot-status"><span class="status-dot"></span>Online</div>
-            </div>
+    <div class="container">
+
+      <div class="section-label">Live demo</div>
+      <h2 class="section-title">See it in action.</h2>
+      <p class="section-sub">Chat with the bot below — watch the lead card appear in the dashboard above in real time.</p>
+
+      <!-- THE BIG WRAPPER: dashboard on top, chatbot on bottom -->
+      <div class="unified-wrap">
+
+        <!-- ── DASHBOARD HEADER ── -->
+        <div class="udash-header">
+          <div class="udash-header-left">
+            <div class="udash-logo">Nexulith<span class="logo-dot">.</span></div>
+            <div class="udash-trial-badge">14 Day Free Trial</div>
           </div>
-          <div class="chatbot-messages" id="chatMessages">
-            <div class="msg bot">
-              <div class="msg-bubble">Hi! I'm here to help you find your perfect property 🏠 What's your budget range?</div>
-              <div class="msg-time">Just now</div>
+          <div class="udash-header-right">
+            <div class="udash-client-info">
+              <span class="udash-client-name">Demo account</span>
+              <span class="udash-sub-badge">Free Trial</span>
             </div>
-          </div>
-          <div class="chatbot-input-wrap">
-            <input type="text" class="chatbot-input" id="chatInput" placeholder="Type a message..." />
-            <button class="chatbot-send" id="chatSend" onclick="sendChatMessage()" aria-label="Send chatbot message" title="Send message">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
+            <div class="udash-divider"></div>
+            <div class="udash-live"><span class="udash-live-dot"></span>Live</div>
+            <button class="udash-upgrade-btn">Upgrade Plan</button>
           </div>
         </div>
-        <!-- Placeholder comment for actual chatbot JS integration -->
-        <!-- <script src="https://yourdomain.com/chatbot.js?key=YOUR_API_KEY"></script> -->
+
+        <!-- ── STATS ROW ── -->
+        <div class="udash-stats">
+          <div class="udash-stat-card">
+            <div class="udash-stat-label">Leads Today</div>
+            <div class="udash-stat-value" id="previewLeadsToday">3</div>
+          </div>
+          <div class="udash-stat-card">
+            <div class="udash-stat-label">Total Leads</div>
+            <div class="udash-stat-value" id="previewTotalLeads">11</div>
+          </div>
+          <div class="udash-stat-card">
+            <div class="udash-stat-label">Attended</div>
+            <div class="udash-stat-value" id="previewAttended">8</div>
+          </div>
+          <div class="udash-stat-card">
+            <div class="udash-stat-label">Conversion Rate</div>
+            <div class="udash-stat-value">--</div>
+          </div>
+        </div>
+
+        <!-- ── MAIN GRID: leads left, panels right ── -->
+        <div class="udash-grid">
+
+          <!-- LEFT: Incoming Leads -->
+          <div class="udash-panel-card">
+            <div class="udash-panel-header">
+              <div>
+                <h2 class="udash-panel-title">Incoming Leads</h2>
+                <p class="udash-panel-sub">Real-time chatbot captures</p>
+              </div>
+              <div class="udash-pulse-live">● LIVE</div>
+            </div>
+            <div class="udash-leads-container" id="previewLeadsList">
+              <div class="udash-empty-state" id="dashEmptyState">
+                <div class="udash-empty-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="26" height="26"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <p>Chat with the bot below — your lead appears here</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Status + Actions + Trial -->
+          <div class="udash-right-col">
+
+            <div class="udash-panel-card">
+              <h3 class="udash-panel-h3">Deployment Status</h3>
+              <div class="udash-deploy-ok">✅ Chatbot Connected</div>
+              <div class="udash-deploy-item"><span>Website</span><span>Connected</span></div>
+              <div class="udash-deploy-item"><span>API Key</span><span>Active</span></div>
+              <div class="udash-deploy-item udash-deploy-item--last"><span>Lead Tracking</span><span>Enabled</span></div>
+            </div>
+
+            <div class="udash-panel-card">
+              <h3 class="udash-panel-h3">Quick Actions</h3>
+              <button class="udash-action-btn">View Script</button>
+              <button class="udash-action-btn">Copy API Key</button>
+              <button class="udash-action-btn">WhatsApp Setup (Coming Soon)</button>
+            </div>
+
+            <div class="udash-panel-card">
+              <h3 class="udash-panel-h3">Trial Status</h3>
+              <div class="udash-trial-days">14 days remaining</div>
+              <div class="udash-trial-bar"><div class="udash-trial-fill"></div></div>
+              <p class="udash-trial-text">Upgrade before trial ends to keep your chatbot active.</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── BRIDGE ARROW ── -->
+        <div class="udash-bridge">
+          <span class="udash-bridge-arrow">↑</span>
+          lead data flows up as you chat below
+          <span class="udash-bridge-arrow">↑</span>
+        </div>
+
+        <!-- ── CHATBOT + DEMO TEXT ── -->
+        <div class="udash-demo-row">
+
+          <div class="udash-demo-text">
+            <ul class="demo-bullets">
+              <li><span class="check">✓</span> Asks budget, location, BHK preferences</li>
+              <li><span class="check">✓</span> Captures phone number naturally</li>
+              <li><span class="check">✓</span> Qualifies the buyer silently</li>
+              <li><span class="check">✓</span> Books site visit on the spot</li>
+            </ul>
+            <div class="demo-cta-card">
+  <div class="demo-cta-text">
+    <span class="demo-cta-label">Ready to capture leads?</span>
+    <h4>Install Nexulith on your website in under 30 seconds.</h4>
+  </div>
+
+  <a href="login.html"
+     class="demo-cta-btn"
+     aria-label="Install Nexulith chatbot on your site">
+    Start Free Trial →
+  </a>
+</div>
+          </div>
+
+          <div class="udash-chatbot-wrap">
+            <div class="chatbot-container" id="chatbotContainer">
+              <div class="chatbot-header">
+                <div class="chatbot-avatar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+                </div>
+                <div>
+                  <div class="chatbot-name">Nexulith AI</div>
+                  <div class="chatbot-status"><span class="status-dot"></span>Online</div>
+                </div>
+              </div>
+              <div class="chatbot-messages" id="chatMessages">
+                <div class="msg bot">
+                  <div class="msg-bubble">Hi! I'm here to help you find your perfect property 🏠 What's your budget range?</div>
+                  <div class="msg-time">Just now</div>
+                </div>
+              </div>
+              <div class="chatbot-input-wrap">
+                <input type="text" class="chatbot-input" id="chatInput" placeholder="Type a message..." />
+                <button class="chatbot-send" id="chatSend" onclick="sendChatMessage()" aria-label="Send chatbot message" title="Send message">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- PROOF / RESULTS -->
+  <!-- PROOF / RESULTS
   <section class="section proof-section" id="proof">
     <div class="container">
       <div class="section-label">Results</div>
@@ -294,58 +429,13 @@
     </div>
   </section>
 
-  <!-- PRICING -->
-  <section class="section pricing-section" id="pricing">
-    <div class="container">
-      <div class="section-label">Pricing</div>
-      <h2 class="section-title">Start small. Scale fast.</h2>
-      <p class="section-sub">No hidden fees. No contracts. Cancel anytime.</p>
-
-      <div class="pricing-grid">
-        <div class="pricing-card">
-          <div class="plan-badge">Free Trial</div>
-          <div class="plan-price">
-            <span class="price-currency">₹</span>
-            <span class="price-amount">0</span>
-          </div>
-          <div class="plan-period">14-day free trial</div>
-          <ul class="plan-features">
-            <li><span class="feat-check">✓</span> Chatbot on your site</li>
-            <li><span class="feat-check">✓</span> Setup included</li>
-            <li><span class="feat-check">✓</span> Lead alerts (WhatsApp/Email)</li>
-            <li><span class="feat-check">✓</span> Upto 20 leads</li>
-            <li><span class="feat-check">✓</span> Basic analytics dashboard</li>
-          </ul>
-          <a href="login.html" class="btn btn-outline btn-full" aria-label="Start the 14-day free Nexulith trial">Start Free Trial</a>
-        </div>
-
-        <div class="pricing-card featured">
-          <div class="plan-badge popular">Most Popular</div>
-          <div class="plan-price">
-            <span class="price-currency">₹</span>
-            <span class="price-amount">8,999</span>
-          </div>
-          <div class="plan-period">per month</div>
-          <ul class="plan-features">
-            <li><span class="feat-check">✓</span> Everything in Free Trial</li>
-            <li><span class="feat-check">✓</span> Unlimited leads</li>
-            <li><span class="feat-check">✓</span> Priority support</li>
-            <li><span class="feat-check">✓</span> Custom chatbot branding</li>
-            <li><span class="feat-check">✓</span> CRM export (CSV)</li>
-          </ul>
-          <a href="login.html" class="btn btn-primary btn-full" aria-label="Choose the Nexulith monthly plan">Get Monthly</a>
-          <div class="plan-note">Most builders upgrade after day 3.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
+  
+   FOOTER -->
   <footer class="footer">
     <div class="container footer-inner">
       <div class="footer-logo">Nexulith<span class="logo-dot">.</span></div>
       <div class="footer-links">
-        <a href="mailto:get.funnel.os@gmail.com">get.funnel.os@gmail.com</a>
+        <a href="mailto:get.nexulith@gmail.com">get.nexulith@gmail.com</a>
         <a href="#">Privacy</a>
         <a href="#">Terms</a>
       </div>

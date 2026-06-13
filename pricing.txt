@@ -1,0 +1,45 @@
+<!-- PRICING -->
+  <section class="section pricing-section" id="pricing">
+    <div class="container">
+      <div class="section-label">Pricing</div>
+      <h2 class="section-title">Start small. Scale fast.</h2>
+      <p class="section-sub">No hidden fees. No contracts. Cancel anytime.</p>
+
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="plan-badge">Free Trial</div>
+          <div class="plan-price">
+            <span class="price-currency">₹</span>
+            <span class="price-amount">0</span>
+          </div>
+          <div class="plan-period">14-day free trial</div>
+          <ul class="plan-features">
+            <li><span class="feat-check">✓</span> Chatbot on your site</li>
+            <li><span class="feat-check">✓</span> Setup included</li>
+            <li><span class="feat-check">✓</span> Lead alerts (WhatsApp/Email)</li>
+            <li><span class="feat-check">✓</span> Upto 20 leads</li>
+            <li><span class="feat-check">✓</span> Basic analytics dashboard</li>
+          </ul>
+          <a href="login.html" class="btn btn-outline btn-full" aria-label="Start the 14-day free Nexulith trial">Start Free Trial</a>
+        </div>
+
+        <div class="pricing-card featured">
+          <div class="plan-badge popular">Most Popular</div>
+          <div class="plan-price">
+            <span class="price-currency">₹</span>
+            <span class="price-amount">8,999</span>
+          </div>
+          <div class="plan-period">per month</div>
+          <ul class="plan-features">
+            <li><span class="feat-check">✓</span> Everything in Free Trial</li>
+            <li><span class="feat-check">✓</span> Unlimited leads</li>
+            <li><span class="feat-check">✓</span> Priority support</li>
+            <li><span class="feat-check">✓</span> Custom chatbot branding</li>
+            <li><span class="feat-check">✓</span> CRM export (CSV)</li>
+          </ul>
+          <a href="login.html" class="btn btn-primary btn-full" aria-label="Choose the Nexulith monthly plan">Get Monthly</a>
+          <div class="plan-note">Most builders upgrade after day 3.</div>
+        </div>
+      </div>
+    </div>
+  </section>

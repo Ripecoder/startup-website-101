@@ -153,6 +153,7 @@ async function sendChatMessage() {
 
     addMessage(data.reply, false);
     messages.push({ role: "assistant", content: data.reply });
+    parseBotReplyForLeadData(data.reply);
 
   } catch (err) {
     chatMessages.removeChild(typing);
@@ -164,6 +165,149 @@ async function sendChatMessage() {
 chatInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') sendChatMessage();
 });
+
+/* ── Dashboard Preview Integration ──────────────────────── */
+const previewLeadsToday = document.getElementById('previewLeadsToday');
+const previewTotalLeads = document.getElementById('previewTotalLeads');
+const previewAttended = document.getElementById('previewAttended');
+const previewLeadsList = document.getElementById('previewLeadsList');
+const dashEmptyState = document.getElementById('dashEmptyState');
+
+let previewLeadData = {
+  phone: null,
+  budget: null,
+  location: null,
+  bhk: null,
+  preference: null,
+};
+let previewLeadCount = 0;
+let previewCardEl = null;
+
+function bumpStat(el) {
+  el.classList.remove('bump');
+  void el.offsetWidth; // reflow
+  el.classList.add('bump');
+  setTimeout(() => el.classList.remove('bump'), 400);
+}
+
+function updatePreviewCard() {
+  if (!previewLeadsList) return;
+
+  if (dashEmptyState && dashEmptyState.parentNode) {
+    dashEmptyState.remove();
+  }
+
+  if (!previewCardEl) {
+    previewLeadCount++;
+    previewCardEl = document.createElement('div');
+    previewCardEl.className = 'udash-lead-card';
+    previewLeadsList.prepend(previewCardEl);
+
+    if (previewLeadsToday) { previewLeadsToday.textContent = previewLeadCount; bumpStat(previewLeadsToday); }
+    if (previewTotalLeads) { previewTotalLeads.textContent = previewLeadCount; bumpStat(previewTotalLeads); }
+  }
+
+  const now = new Date();
+  const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+  const d = previewLeadData;
+
+  previewCardEl.innerHTML = `
+    <div class="udash-lead-top">
+      <div>
+        <div class="udash-lead-name">New Lead</div>
+        <div class="udash-lead-time">Lead arrived just now · ${timeStr}</div>
+      </div>
+      <label class="udash-attended-wrap">
+        <input type="checkbox" class="udash-attended-checkbox">
+        <span>Attended</span>
+      </label>
+    </div>
+    <div class="udash-lead-details">
+      <div class="udash-lead-item">Phone: ${d.phone ? escapeHtml(d.phone) : '<span style="opacity:0.4">collecting…</span>'}</div>
+      <div class="udash-lead-item">Budget: ${d.budget ? escapeHtml(d.budget) : '<span style="opacity:0.4">collecting…</span>'}</div>
+      <div class="udash-lead-item">Location: ${d.location ? escapeHtml(d.location) : '<span style="opacity:0.4">collecting…</span>'}</div>
+      <div class="udash-lead-item">BHK: ${d.bhk ? escapeHtml(d.bhk) : '<span style="opacity:0.4">collecting…</span>'}</div>
+      <div class="udash-lead-item">Preference: ${d.preference ? escapeHtml(d.preference) : '<span style="opacity:0.4">collecting…</span>'}</div>
+    </div>
+  `;
+}
+
+// Parse bot replies for lead data
+function parseBotReplyForLeadData(botText) {
+  const lower = botText.toLowerCase();
+  let updated = false;
+
+  // Phone number detection
+  const phoneMatch = botText.match(/\b(\+91[\s-]?)?[6-9]\d{9}\b/);
+  if (phoneMatch && !previewLeadData.phone) {
+    previewLeadData.phone = phoneMatch[0];
+    updated = true;
+  }
+
+  // Budget detection (from user messages too, but we check bot confirmations)
+  const budgetMatch = botText.match(/(?:budget|rs\.?|₹)\s*([\d,]+(?:\s*(?:lakh|lac|cr|crore|k|l))?)/i)
+    || botText.match(/([\d,]+)\s*(lakh|lac|cr|crore|k)/i);
+  if (budgetMatch && !previewLeadData.budget) {
+    previewLeadData.budget = budgetMatch[0].replace(/budget[:\s]*/i, '').trim();
+    updated = true;
+  }
+
+  return updated;
+}
+
+// Parse user messages for lead data
+function parseUserMessageForLeadData(userText) {
+  let updated = false;
+  const lower = userText.toLowerCase();
+
+  // Phone
+  const phoneMatch = userText.match(/\b(\+91[\s-]?)?[6-9]\d{9}\b/);
+  if (phoneMatch && !previewLeadData.phone) {
+    previewLeadData.phone = phoneMatch[0];
+    updated = true;
+  }
+
+  // Budget — flexible
+  const budgetPatterns = [
+    /(?:rs\.?|₹)\s*([\d,]+(?:\s*(?:lakh|lac|cr|crore|k))?)/i,
+    /([\d,]+)\s*(lakh|lac|cr|crore|k)/i,
+    /budget\s*(?:is|around|of)?\s*([\d,]+\s*(?:lakh|lac|cr|crore|k)?)/i,
+  ];
+  for (const pat of budgetPatterns) {
+    const m = userText.match(pat);
+    if (m && !previewLeadData.budget) {
+      previewLeadData.budget = m[0];
+      updated = true;
+      break;
+    }
+  }
+
+  // BHK
+  const bhkMatch = userText.match(/\b([1-6])\s*bhk\b/i);
+  if (bhkMatch && !previewLeadData.bhk) {
+    previewLeadData.bhk = bhkMatch[0].toUpperCase();
+    updated = true;
+  }
+
+  // Location — look for city names / "in <place>"
+  const locationMatch = userText.match(/(?:in|at|near|around)\s+([A-Za-z\s]{3,25}?)(?:\s|,|$)/i)
+    || userText.match(/\b(mumbai|pune|bangalore|bengaluru|delhi|hyderabad|chennai|kolkata|ahmedabad|surat|thane|navi mumbai|andheri|bandra|powai|malad|goregaon)\b/i);
+  if (locationMatch && !previewLeadData.location) {
+    previewLeadData.location = (locationMatch[1] || locationMatch[0]).trim();
+    updated = true;
+  }
+
+  if (updated) updatePreviewCard();
+}
+
+// Monkey-patch sendChatMessage to intercept messages
+const _origSend = sendChatMessage;
+window.sendChatMessage = async function() {
+  const text = chatInput.value.trim();
+  if (text) parseUserMessageForLeadData(text);
+
+  await _origSend();
+};
 /* ── Copy API Key ───────────────────── */
 function copyApiKey() {
 
