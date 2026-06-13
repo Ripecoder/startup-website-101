@@ -1975,3 +1975,53 @@ select:focus-visible {
   background: rgba(96,165,250,0.12);
   filter: blur(30px);
 }
+/* ─────────────────────────────────────
+   Pain Section
+───────────────────────────────────── */
+
+.pain-section {
+  padding: 100px 0;
+}
+
+.pain-section h2 {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 48px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.pain-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.pain-card {
+  padding: 28px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(12px);
+
+  font-size: 1.05rem;
+  line-height: 1.6;
+  font-weight: 500;
+
+  transition: transform .25s ease,
+              border-color .25s ease,
+              background .25s ease;
+}
+
+.pain-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.05);
+}
+
+@media (max-width: 900px) {
+  .pain-grid {
+    grid-template-columns: 1fr;
+  }
+}
