@@ -86,8 +86,7 @@ const chatInput = document.getElementById('chatInput');
 
 let messages = [];
 const BACKEND_URL = "https://server-vls8.onrender.com/chat";
-const SESSION_ID = "demo_" + Date.now();
-
+const SESSION_ID = "vrb_live_clinicbot007_gmail.com_1780386699"
 /* ── NEW: Client email capture ───────────────────────────── */
 
 let clientEmail = "";
