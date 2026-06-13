@@ -124,41 +124,60 @@ async function sendChatMessage() {
   chatInput.value = '';
   addMessage(text, true);
 
-  messages.push({ role: "user", content: text });
+  messages.push({
+    role: "user",
+    content: text
+  });
 
   // typing indicator
   const typing = document.createElement('div');
   typing.className = 'msg bot';
   typing.innerHTML = '<div class="msg-bubble">typing…</div>';
+
   chatMessages.appendChild(typing);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 
   try {
+
     const res = await fetch(BACKEND_URL, {
       method: "POST",
       headers: {
-          "Content-Type": "application/json"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-      messages: messages,
-      api_key: "vrb_live_n21816012_gmail.com_1780381110",
-      session_id: SESSION_ID,
-  })
-});
-
-const data = await res.json();
-
-console.log("SERVER RESPONSE:", data);
+        messages: messages,
+        api_key: "vrb_live_n21816012_gmail.com_1780381110",
+        session_id: SESSION_ID,
+        client_email: clientEmail
+      })
+    });
 
     const data = await res.json();
+
+    console.log("SERVER RESPONSE:", data);
+
     chatMessages.removeChild(typing);
 
     addMessage(data.reply, false);
-    messages.push({ role: "assistant", content: data.reply });
-    parseBotReplyForLeadData(data.reply);
+
+    messages.push({
+      role: "assistant",
+      content: data.reply
+    });
+
+    // Wait 3s then check if lead reached DB
+    setTimeout(() => {
+      pollLeads();
+    }, 3000);
 
   } catch (err) {
-    chatMessages.removeChild(typing);
+
+    console.error(err);
+
+    if (typing.parentNode) {
+      chatMessages.removeChild(typing);
+    }
+
     addMessage("Server error", false);
   }
 }
@@ -175,66 +194,126 @@ const previewAttended = document.getElementById('previewAttended');
 const previewLeadsList = document.getElementById('previewLeadsList');
 const dashEmptyState = document.getElementById('dashEmptyState');
 
-let previewLeadData = {
-  phone: null,
-  budget: null,
-  location: null,
-  bhk: null,
-  preference: null,
-};
 let previewLeadCount = 0;
-let previewCardEl = null;
 
-function bumpStat(el) {
-  el.classList.remove('bump');
-  void el.offsetWidth; // reflow
-  el.classList.add('bump');
-  setTimeout(() => el.classList.remove('bump'), 400);
-}
+function renderLeadFromServer(lead) {
 
-function updatePreviewCard() {
   if (!previewLeadsList) return;
 
-  if (dashEmptyState && dashEmptyState.parentNode) {
+  const existing = document.getElementById("demoLeadCard");
+
+  if (existing) {
+    existing.remove();
+  }
+
+  if (dashEmptyState) {
     dashEmptyState.remove();
   }
 
-  if (!previewCardEl) {
-    previewLeadCount++;
-    previewCardEl = document.createElement('div');
-    previewCardEl.className = 'udash-lead-card';
-    previewLeadsList.prepend(previewCardEl);
+  previewLeadCount = 1;
 
-    if (previewLeadsToday) { previewLeadsToday.textContent = previewLeadCount; bumpStat(previewLeadsToday); }
-    if (previewTotalLeads) { previewTotalLeads.textContent = previewLeadCount; bumpStat(previewTotalLeads); }
-  }
+  if (previewLeadsToday)
+    previewLeadsToday.textContent = "1";
 
-  const now = new Date();
-  const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
-  const d = previewLeadData;
+  if (previewTotalLeads)
+    previewTotalLeads.textContent = "1";
 
-  previewCardEl.innerHTML = `
+  const card = document.createElement("div");
+
+  card.id = "demoLeadCard";
+  card.className = "udash-lead-card";
+
+  card.innerHTML = `
     <div class="udash-lead-top">
       <div>
-        <div class="udash-lead-name">New Lead</div>
-        <div class="udash-lead-time">Lead arrived just now · ${timeStr}</div>
+        <div class="udash-lead-name">
+          ${escapeHtml(lead.intent || "New Lead")}
+        </div>
+
+        <div class="udash-lead-time">
+          Lead arrived just now
+        </div>
       </div>
-      <label class="udash-attended-wrap">
-        <input type="checkbox" class="udash-attended-checkbox">
-        <span>Attended</span>
-      </label>
     </div>
+
     <div class="udash-lead-details">
-      <div class="udash-lead-item">Phone: ${d.phone ? escapeHtml(d.phone) : '<span style="opacity:0.4">collecting…</span>'}</div>
-      <div class="udash-lead-item">Budget: ${d.budget ? escapeHtml(d.budget) : '<span style="opacity:0.4">collecting…</span>'}</div>
-      <div class="udash-lead-item">Location: ${d.location ? escapeHtml(d.location) : '<span style="opacity:0.4">collecting…</span>'}</div>
-      <div class="udash-lead-item">BHK: ${d.bhk ? escapeHtml(d.bhk) : '<span style="opacity:0.4">collecting…</span>'}</div>
-      <div class="udash-lead-item">Preference: ${d.preference ? escapeHtml(d.preference) : '<span style="opacity:0.4">collecting…</span>'}</div>
+      <div class="udash-lead-item">
+        Phone: ${escapeHtml(lead.phone || "N/A")}
+      </div>
+
+      <div class="udash-lead-item">
+        Budget: ${escapeHtml(String(lead.budget || "N/A"))}
+      </div>
+
+      <div class="udash-lead-item">
+        Location: ${escapeHtml(lead.location || "N/A")}
+      </div>
+
+      <div class="udash-lead-item">
+        BHK: ${escapeHtml(lead.bhk || "N/A")}
+      </div>
+
+      <div class="udash-lead-item">
+        Preference: ${escapeHtml(lead.special_preferences || "None")}
+      </div>
     </div>
   `;
+
+  previewLeadsList.prepend(card);
 }
 
+async function pollLeads() {
 
+  try {
+
+    const res = await fetch(
+      "https://website-server-9b3o.onrender.com/api/client/leads",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          api_key: "vrb_live_n21816012_gmail.com_1780381110"
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    console.log("LEADS RESPONSE:", data);
+
+    if (
+      data.success &&
+      data.leads &&
+      data.leads.length > 0
+    ) {
+
+      console.log(
+        "LATEST LEAD:",
+        data.leads[0]
+      );
+
+      renderLeadFromServer(
+        data.leads[0]
+      );
+    } else {
+
+      console.log(
+        "NO LEADS FOUND"
+      );
+
+    }
+
+  } catch (err) {
+
+    console.error(
+      "POLL LEADS ERROR:",
+      err
+    );
+
+  }
+}
 // Parse user messages for lead data
 
 
@@ -276,5 +355,3 @@ function copySnippet() {
       console.error("Copy failed:", err);
     });
 }
-const data = await res.json();
-console.log("SERVER RESPONSE:", data);
