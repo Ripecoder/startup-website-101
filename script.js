@@ -137,15 +137,18 @@ async function sendChatMessage() {
     const res = await fetch(BACKEND_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+          "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        messages: messages,
-        api_key: "vrb_live_n21816012_gmail.com_1780381110",
-        session_id: SESSION_ID,
-        client_email: clientEmail   // ✅ NEW FIELD ADDED
-      })
-    });
+      messages: messages,
+      api_key: "vrb_live_n21816012_gmail.com_1780381110",
+      session_id: SESSION_ID,
+  })
+});
+
+const data = await res.json();
+
+console.log("SERVER RESPONSE:", data);
 
     const data = await res.json();
     chatMessages.removeChild(typing);
@@ -231,82 +234,12 @@ function updatePreviewCard() {
   `;
 }
 
-// Parse bot replies for lead data
-function parseBotReplyForLeadData(botText) {
-  const lower = botText.toLowerCase();
-  let updated = false;
-
-  // Phone number detection
-  const phoneMatch = botText.match(/\b(\+91[\s-]?)?[6-9]\d{9}\b/);
-  if (phoneMatch && !previewLeadData.phone) {
-    previewLeadData.phone = phoneMatch[0];
-    updated = true;
-  }
-
-  // Budget detection (from user messages too, but we check bot confirmations)
-  const budgetMatch = botText.match(/(?:budget|rs\.?|₹)\s*([\d,]+(?:\s*(?:lakh|lac|cr|crore|k|l))?)/i)
-    || botText.match(/([\d,]+)\s*(lakh|lac|cr|crore|k)/i);
-  if (budgetMatch && !previewLeadData.budget) {
-    previewLeadData.budget = budgetMatch[0].replace(/budget[:\s]*/i, '').trim();
-    updated = true;
-  }
-
-  return updated;
-}
 
 // Parse user messages for lead data
-function parseUserMessageForLeadData(userText) {
-  let updated = false;
-  const lower = userText.toLowerCase();
 
-  // Phone
-  const phoneMatch = userText.match(/\b(\+91[\s-]?)?[6-9]\d{9}\b/);
-  if (phoneMatch && !previewLeadData.phone) {
-    previewLeadData.phone = phoneMatch[0];
-    updated = true;
-  }
-
-  // Budget — flexible
-  const budgetPatterns = [
-    /(?:rs\.?|₹)\s*([\d,]+(?:\s*(?:lakh|lac|cr|crore|k))?)/i,
-    /([\d,]+)\s*(lakh|lac|cr|crore|k)/i,
-    /budget\s*(?:is|around|of)?\s*([\d,]+\s*(?:lakh|lac|cr|crore|k)?)/i,
-  ];
-  for (const pat of budgetPatterns) {
-    const m = userText.match(pat);
-    if (m && !previewLeadData.budget) {
-      previewLeadData.budget = m[0];
-      updated = true;
-      break;
-    }
-  }
-
-  // BHK
-  const bhkMatch = userText.match(/\b([1-6])\s*bhk\b/i);
-  if (bhkMatch && !previewLeadData.bhk) {
-    previewLeadData.bhk = bhkMatch[0].toUpperCase();
-    updated = true;
-  }
-
-  // Location — look for city names / "in <place>"
-  const locationMatch = userText.match(/(?:in|at|near|around)\s+([A-Za-z\s]{3,25}?)(?:\s|,|$)/i)
-    || userText.match(/\b(mumbai|pune|bangalore|bengaluru|delhi|hyderabad|chennai|kolkata|ahmedabad|surat|thane|navi mumbai|andheri|bandra|powai|malad|goregaon)\b/i);
-  if (locationMatch && !previewLeadData.location) {
-    previewLeadData.location = (locationMatch[1] || locationMatch[0]).trim();
-    updated = true;
-  }
-
-  if (updated) updatePreviewCard();
-}
 
 // Monkey-patch sendChatMessage to intercept messages
-const _origSend = sendChatMessage;
-window.sendChatMessage = async function() {
-  const text = chatInput.value.trim();
-  if (text) parseUserMessageForLeadData(text);
 
-  await _origSend();
-};
 /* ── Copy API Key ───────────────────── */
 function copyApiKey() {
 
@@ -343,3 +276,5 @@ function copySnippet() {
       console.error("Copy failed:", err);
     });
 }
+const data = await res.json();
+console.log("SERVER RESPONSE:", data);
