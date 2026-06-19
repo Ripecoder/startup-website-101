@@ -85,7 +85,7 @@ const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 
 let messages = [];
-const BACKEND_URL = "https://server-6scd.onrender.com";
+const BACKEND_URL = "https://server-6scd.onrender.com/chat";
 const SESSION_ID = crypto.randomUUID();
 /* ── NEW: Client email capture ───────────────────────────── */
 
