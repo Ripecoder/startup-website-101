@@ -267,7 +267,7 @@ async function pollLeads() {
   try {
 
     const res = await fetch(
-      "https://website-server-9b3o.onrender.com/api/client/leads",
+      "https://website-server-b5i0.onrender.com/api/client/leads",
       {
         method: "POST",
         headers: {
