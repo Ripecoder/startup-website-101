@@ -16,7 +16,7 @@ function escapeHtml(text) {
 
 const SUPABASE_URL = "https://wbwmffhegokbnfgtfufz.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indid21mZmhlZ29rYm5mZ3RmdWZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMzYzNTcsImV4cCI6MjA5MzYxMjM1N30.7KNAJ_nZwqbdFMlRmEclGPoGx2ywTUmVwn3LxfdBF-w";
-const API_BASE_URL = "https://website-server-9b3o.onrender.com";
+const API_BASE_URL = "https://website-server-b5i0.onrender.com";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
