@@ -3,3 +3,5 @@ node_modules/
 .env
 __pycache__/
 *.pyc
+
+# --- snapshot archived on branch "Nirmal"; fresh build lives on "Daiwik" ---
