@@ -156,6 +156,57 @@ h1, h2, h3, h4 {
   transform: translateY(-1px);
 }
 
+.contact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 15px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #fff;
+  white-space: nowrap;
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease), transform 0.25s var(--ease);
+}
+
+.wa svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: #25d366;
+}
+
+.wa:hover {
+  border-color: rgba(37, 211, 102, 0.55);
+  background: rgba(37, 211, 102, 0.1);
+  transform: translateY(-1px);
+}
+
+.wa-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wa-link svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: #25d366;
+}
+
+.wa-link:hover { color: #fff; }
+
 .mail-dot,
 .dot {
   width: 8px;
@@ -853,6 +904,11 @@ details p {
 /* ---------------------------------------------------------
    Responsive
    --------------------------------------------------------- */
+@media (max-width: 1080px) {
+  .wa-text { display: none; }
+  .wa { padding: 9px 12px; }
+}
+
 @media (max-width: 980px) {
   .cards,
   .plans { grid-template-columns: 1fr; }
@@ -873,8 +929,12 @@ details p {
 
   .nav-inner { padding: 12px 0; }
 
+  .contact { gap: 8px; }
+
   .mail { padding: 8px 12px; font-size: 11.5px; }
-  .mail-text { max-width: 44vw; overflow: hidden; text-overflow: ellipsis; }
+  .mail-text { max-width: 38vw; overflow: hidden; text-overflow: ellipsis; }
+
+  .wa { padding: 8px 11px; }
 
   .nav-links {
     position: fixed;
